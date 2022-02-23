@@ -1,0 +1,1281 @@
+52a53
+> 	"github.com/opencord/voltha-protos/v5/go/bossopenolt"
+1691a1693,2970
+> func (agent *Agent) getCustomVlan(ctx context.Context, reqMessage *bossopenolt.BossRequest) (*bossopenolt.GetVlanResponse, error) {
+> 	logger.Debugw(ctx, "setSingleValue", log.Fields{"device-id": reqMessage.DeviceId})
+> 
+>      client, err := agent.adapterMgr.GetAdapterClient(ctx, agent.adapterEndpoint)
+>     if err != nil {
+>                 logger.Errorw(ctx, "getCustomVlan-grpc-client-nil",
+>                         log.Fields{
+>                                 "error":       err,
+>                                 "device-id":   agent.deviceID,
+>                                 "device-type": agent.deviceType,
+>                         })
+>                 return &bossopenolt.GetVlanResponse{}, err
+>         }
+> 
+> 
+>     return client.GetCustomVlan(ctx, reqMessage)
+> }
+> func (agent *Agent) GetOltConnect(ctx context.Context, reqMessage *bossopenolt.BossRequest) (*bossopenolt.OltConnResponse, error) {
+>     logger.Debugw(ctx, "GetOltConnect", log.Fields{"device-id": reqMessage.DeviceId})
+> 
+>     client, err := agent.adapterMgr.GetAdapterClient(ctx, agent.adapterEndpoint)
+>     if err != nil {
+>                 logger.Errorw(ctx, "GetOltConnect-grpc-client-nil",
+>                         log.Fields{
+>                                 "error":       err,
+>                                 "device-id":   agent.deviceID,
+>                                 "device-type": agent.deviceType,
+>                         })
+>                 return &bossopenolt.OltConnResponse{}, err
+>         }
+> 
+> 
+>     return client.GetOltConnect(ctx, reqMessage)
+> }
+> 
+> func (agent *Agent) GetOltDeviceInfo(ctx context.Context, reqMessage *bossopenolt.BossRequest) (*bossopenolt.OltDevResponse, error) {
+>     logger.Debugw(ctx, "GetOltDeviceInfo", log.Fields{"device-id": reqMessage.DeviceId})
+> 
+>     client, err := agent.adapterMgr.GetAdapterClient(ctx, agent.adapterEndpoint)
+>     if err != nil {
+>                 logger.Errorw(ctx, "GetOltDeviceInfo-grpc-client-nil",
+>                         log.Fields{
+>                                 "error":       err,
+>                                 "device-id":   agent.deviceID,
+>                                 "device-type": agent.deviceType,
+>                         })
+>                 return &bossopenolt.OltDevResponse{}, err
+>         }
+> 
+> 
+>     return client.GetOltDeviceInfo(ctx, reqMessage)
+> }
+> 
+> func (agent *Agent) SetPmdTxDis(ctx context.Context, reqMessage *bossopenolt.BossRequest) (*bossopenolt.ExecResult, error) {
+>     logger.Debugw(ctx, "SetPmdTxDis", log.Fields{"device-id": reqMessage.DeviceId})
+>     client, err := agent.adapterMgr.GetAdapterClient(ctx, agent.adapterEndpoint)
+>     if err != nil {
+>                 logger.Errorw(ctx, "SetPmdTxDis-grpc-client-nil",
+>                         log.Fields{
+>                                 "error":       err,
+>                                 "device-id":   agent.deviceID,
+>                                 "device-type": agent.deviceType,
+>                         })
+>                 return &bossopenolt.ExecResult{}, err
+>         }
+> 
+> 
+>     return client.SetPmdTxDis(ctx, reqMessage)
+> }
+> 
+> func (agent *Agent) GetPmdTxdis(ctx context.Context, reqMessage *bossopenolt.BossRequest) (*bossopenolt.PmdTxdisResponse, error) {
+>     logger.Debugw(ctx, "GetPmdTxdis", log.Fields{"device-id": reqMessage.DeviceId})
+>     client, err := agent.adapterMgr.GetAdapterClient(ctx, agent.adapterEndpoint)
+>     if err != nil {
+>                 logger.Errorw(ctx, "GetPmdTxdis-grpc-client-nil",
+>                         log.Fields{
+>                                 "error":       err,
+>                                 "device-id":   agent.deviceID,
+>                                 "device-type": agent.deviceType,
+>                         })
+>                 return &bossopenolt.PmdTxdisResponse{}, err
+>         }
+> 
+> 
+>     return client.GetPmdTxdis(ctx, reqMessage)
+> }
+> 
+> func (agent *Agent) GetDevicePmdStatus(ctx context.Context, reqMessage *bossopenolt.BossRequest) (*bossopenolt.PmdStatusResponse, error) {
+>     logger.Debugw(ctx, "GetDevicePmdStatus", log.Fields{"device-id": reqMessage.DeviceId})
+>     client, err := agent.adapterMgr.GetAdapterClient(ctx, agent.adapterEndpoint)
+>     if err != nil {
+>                 logger.Errorw(ctx, "GetDevicePmdStatus-grpc-client-nil",
+>                         log.Fields{
+>                                 "error":       err,
+>                                 "device-id":   agent.deviceID,
+>                                 "device-type": agent.deviceType,
+>                         })
+>                 return &bossopenolt.PmdStatusResponse{}, err
+>         }
+> 
+> 
+>     return client.GetDevicePmdStatus(ctx, reqMessage)
+> }
+> 
+> func (agent *Agent) SetDevicePort(ctx context.Context, reqMessage *bossopenolt.BossRequest) (*bossopenolt.ExecResult, error) {
+>     logger.Debugw(ctx, "SetDevicePort", log.Fields{"device-id": reqMessage.DeviceId})
+>     client, err := agent.adapterMgr.GetAdapterClient(ctx, agent.adapterEndpoint)
+>     if err != nil {
+>                 logger.Errorw(ctx, "SetDevicePort-grpc-client-nil",
+>                         log.Fields{
+>                                 "error":       err,
+>                                 "device-id":   agent.deviceID,
+>                                 "device-type": agent.deviceType,
+>                         })
+>                 return &bossopenolt.ExecResult{}, err
+>         }
+> 
+> 
+>     return client.SetDevicePort(ctx, reqMessage)
+> }
+> 
+> func (agent *Agent) GetDevicePort(ctx context.Context, reqMessage *bossopenolt.BossRequest) (*bossopenolt.GetPortResponse, error) {
+>     logger.Debugw(ctx, "GetDevicePort", log.Fields{"device-id": reqMessage.DeviceId})
+>     client, err := agent.adapterMgr.GetAdapterClient(ctx, agent.adapterEndpoint)
+>     if err != nil {
+>                 logger.Errorw(ctx, "GetDevicePort-grpc-client-nil",
+>                         log.Fields{
+>                                 "error":       err,
+>                                 "device-id":   agent.deviceID,
+>                                 "device-type": agent.deviceType,
+>                         })
+>                 return &bossopenolt.GetPortResponse{}, err
+>         }
+> 
+> 
+>     return client.GetDevicePort(ctx, reqMessage)
+> }
+> 
+> func (agent *Agent) PortReset(ctx context.Context, reqMessage *bossopenolt.BossRequest) (*bossopenolt.ExecResult, error) {
+>     logger.Debugw(ctx, "PortReset", log.Fields{"device-id": reqMessage.DeviceId})
+>     client, err := agent.adapterMgr.GetAdapterClient(ctx, agent.adapterEndpoint)
+>     if err != nil {
+>                 logger.Errorw(ctx, "PortReset-grpc-client-nil",
+>                         log.Fields{
+>                                 "error":       err,
+>                                 "device-id":   agent.deviceID,
+>                                 "device-type": agent.deviceType,
+>                         })
+>                 return &bossopenolt.ExecResult{}, err
+>         }
+> 
+> 
+>     return client.PortReset(ctx, reqMessage)
+> }
+> 
+> func (agent *Agent) SetMtuSize(ctx context.Context, reqMessage *bossopenolt.BossRequest) (*bossopenolt.ExecResult, error) {
+>     logger.Debugw(ctx, "SetMtuSize", log.Fields{"device-id": reqMessage.DeviceId})
+>     client, err := agent.adapterMgr.GetAdapterClient(ctx, agent.adapterEndpoint)
+>     if err != nil {
+>                 logger.Errorw(ctx, "SetMtuSize-grpc-client-nil",
+>                         log.Fields{
+>                                 "error":       err,
+>                                 "device-id":   agent.deviceID,
+>                                 "device-type": agent.deviceType,
+>                         })
+>                 return &bossopenolt.ExecResult{}, err
+>         }
+> 
+> 
+>     return client.SetMtuSize(ctx, reqMessage)
+> }
+> 
+> func (agent *Agent) GetMtuSize(ctx context.Context, reqMessage *bossopenolt.BossRequest) (*bossopenolt.MtuSizeResponse, error) {
+>     logger.Debugw(ctx, "GetMtuSize", log.Fields{"device-id": reqMessage.DeviceId})
+>     client, err := agent.adapterMgr.GetAdapterClient(ctx, agent.adapterEndpoint)
+>     if err != nil {
+>                 logger.Errorw(ctx, "GetMtuSize-grpc-client-nil",
+>                         log.Fields{
+>                                 "error":       err,
+>                                 "device-id":   agent.deviceID,
+>                                 "device-type": agent.deviceType,
+>                         })
+>                 return &bossopenolt.MtuSizeResponse{}, err
+>         }
+> 
+> 
+>     return client.GetMtuSize(ctx, reqMessage)
+> }
+> 
+> func (agent *Agent) SetVlan(ctx context.Context, reqMessage *bossopenolt.BossRequest) (*bossopenolt.ExecResult, error) {
+>     logger.Debugw(ctx, "SetVlan", log.Fields{"device-id": reqMessage.DeviceId})
+>     client, err := agent.adapterMgr.GetAdapterClient(ctx, agent.adapterEndpoint)
+>     if err != nil {
+>                 logger.Errorw(ctx, "SetVlan-grpc-client-nil",
+>                         log.Fields{
+>                                 "error":       err,
+>                                 "device-id":   agent.deviceID,
+>                                 "device-type": agent.deviceType,
+>                         })
+>                 return &bossopenolt.ExecResult{}, err
+>         }
+> 
+> 
+>     return client.SetVlan(ctx, reqMessage)
+> }
+> 
+> func (agent *Agent) SetLutMode(ctx context.Context, reqMessage *bossopenolt.BossRequest) (*bossopenolt.ExecResult, error) {
+>     logger.Debugw(ctx, "SetLutMode", log.Fields{"device-id": reqMessage.DeviceId})
+>     client, err := agent.adapterMgr.GetAdapterClient(ctx, agent.adapterEndpoint)
+>     if err != nil {
+>                 logger.Errorw(ctx, "SetLutMode-grpc-client-nil",
+>                         log.Fields{
+>                                 "error":       err,
+>                                 "device-id":   agent.deviceID,
+>                                 "device-type": agent.deviceType,
+>                         })
+>                 return &bossopenolt.ExecResult{}, err
+>         }
+> 
+> 
+>     return client.SetLutMode(ctx, reqMessage)
+> }
+> 
+> func (agent *Agent) GetLutMode(ctx context.Context, reqMessage *bossopenolt.BossRequest) (*bossopenolt.ModeResponse, error) {
+>     logger.Debugw(ctx, "GetLutMode", log.Fields{"device-id": reqMessage.DeviceId})
+>     client, err := agent.adapterMgr.GetAdapterClient(ctx, agent.adapterEndpoint)
+>     if err != nil {
+>                 logger.Errorw(ctx, "GetLutMode-grpc-client-nil",
+>                         log.Fields{
+>                                 "error":       err,
+>                                 "device-id":   agent.deviceID,
+>                                 "device-type": agent.deviceType,
+>                         })
+>                 return &bossopenolt.ModeResponse{}, err
+>         }
+> 
+> 
+>     return client.GetLutMode(ctx, reqMessage)
+> }
+> 
+> func (agent *Agent) SetAgingMode(ctx context.Context, reqMessage *bossopenolt.BossRequest) (*bossopenolt.ExecResult, error) {
+>     logger.Debugw(ctx, "SetAgingMode", log.Fields{"device-id": reqMessage.DeviceId})
+>     client, err := agent.adapterMgr.GetAdapterClient(ctx, agent.adapterEndpoint)
+>     if err != nil {
+>                 logger.Errorw(ctx, "SetAgingMode-grpc-client-nil",
+>                         log.Fields{
+>                                 "error":       err,
+>                                 "device-id":   agent.deviceID,
+>                                 "device-type": agent.deviceType,
+>                         })
+>                 return &bossopenolt.ExecResult{}, err
+>         }
+> 
+> 
+>     return client.SetAgingMode(ctx, reqMessage)
+> }
+> 
+> func (agent *Agent) GetAgingMode(ctx context.Context, reqMessage *bossopenolt.BossRequest) (*bossopenolt.ModeResponse, error) {
+>     logger.Debugw(ctx, "GetAgingMode", log.Fields{"device-id": reqMessage.DeviceId})
+>     client, err := agent.adapterMgr.GetAdapterClient(ctx, agent.adapterEndpoint)
+>     if err != nil {
+>                 logger.Errorw(ctx, "GetAgingMode-grpc-client-nil",
+>                         log.Fields{
+>                                 "error":       err,
+>                                 "device-id":   agent.deviceID,
+>                                 "device-type": agent.deviceType,
+>                         })
+>                 return &bossopenolt.ModeResponse{}, err
+>         }
+> 
+> 
+>     return client.GetAgingMode(ctx, reqMessage)
+> }
+> 
+> func (agent *Agent) SetAgingTime(ctx context.Context, reqMessage *bossopenolt.BossRequest) (*bossopenolt.ExecResult, error) {
+>     logger.Debugw(ctx, "SetAgingTime", log.Fields{"device-id": reqMessage.DeviceId})
+>     client, err := agent.adapterMgr.GetAdapterClient(ctx, agent.adapterEndpoint)
+>     if err != nil {
+>                 logger.Errorw(ctx, "SetAgingTime-grpc-client-nil",
+>                         log.Fields{
+>                                 "error":       err,
+>                                 "device-id":   agent.deviceID,
+>                                 "device-type": agent.deviceType,
+>                         })
+>                 return &bossopenolt.ExecResult{}, err
+>         }
+> 
+> 
+>     return client.SetAgingTime(ctx, reqMessage)
+> }
+> 
+> func (agent *Agent) GetAgingTime(ctx context.Context, reqMessage *bossopenolt.BossRequest) (*bossopenolt.AgingTimeResponse, error) {
+>     logger.Debugw(ctx, "GetAgingTime", log.Fields{"device-id": reqMessage.DeviceId})
+>     client, err := agent.adapterMgr.GetAdapterClient(ctx, agent.adapterEndpoint)
+>     if err != nil {
+>                 logger.Errorw(ctx, "GetAgingTime-grpc-client-nil",
+>                         log.Fields{
+>                                 "error":       err,
+>                                 "device-id":   agent.deviceID,
+>                                 "device-type": agent.deviceType,
+>                         })
+>                 return &bossopenolt.AgingTimeResponse{}, err
+>         }
+> 
+> 
+>     return client.GetAgingTime(ctx, reqMessage)
+> }
+> 
+> func (agent *Agent) GetDeviceMacInfo(ctx context.Context, reqMessage *bossopenolt.BossRequest) (*bossopenolt.DevMacInfoResponse, error) {
+>     logger.Debugw(ctx, "GetDeviceMacInfo", log.Fields{"device-id": reqMessage.DeviceId})
+>     client, err := agent.adapterMgr.GetAdapterClient(ctx, agent.adapterEndpoint)
+>     if err != nil {
+>                 logger.Errorw(ctx, "GetDeviceMacInfo-grpc-client-nil",
+>                         log.Fields{
+>                                 "error":       err,
+>                                 "device-id":   agent.deviceID,
+>                                 "device-type": agent.deviceType,
+>                         })
+>                 return &bossopenolt.DevMacInfoResponse{}, err
+>         }
+> 
+> 
+>     return client.GetDeviceMacInfo(ctx, reqMessage)
+> }
+> 
+> func (agent *Agent) SetSdnTable(ctx context.Context, reqMessage *bossopenolt.BossRequest) (*bossopenolt.SdnTableKeyResponse, error) {
+>     logger.Debugw(ctx, "SetSdnTable", log.Fields{"device-id": reqMessage.DeviceId})
+>     client, err := agent.adapterMgr.GetAdapterClient(ctx, agent.adapterEndpoint)
+>     if err != nil {
+>                 logger.Errorw(ctx, "SetSdnTable-grpc-client-nil",
+>                         log.Fields{
+>                                 "error":       err,
+>                                 "device-id":   agent.deviceID,
+>                                 "device-type": agent.deviceType,
+>                         })
+>                 return &bossopenolt.SdnTableKeyResponse{}, err
+>         }
+> 
+> 
+>     return client.SetSdnTable(ctx, reqMessage)
+> }
+> 
+> func (agent *Agent) GetSdnTable(ctx context.Context, reqMessage *bossopenolt.BossRequest) (*bossopenolt.SdnTableResponse, error) {
+>     logger.Debugw(ctx, "GetSdnTable", log.Fields{"device-id": reqMessage.DeviceId})
+>     client, err := agent.adapterMgr.GetAdapterClient(ctx, agent.adapterEndpoint)
+>     if err != nil {
+>                 logger.Errorw(ctx, "GetSdnTable-grpc-client-nil",
+>                         log.Fields{
+>                                 "error":       err,
+>                                 "device-id":   agent.deviceID,
+>                                 "device-type": agent.deviceType,
+>                         })
+>                 return &bossopenolt.SdnTableResponse{}, err
+>         }
+> 
+> 
+>     return client.GetSdnTable(ctx, reqMessage)
+> }
+> 
+> func (agent *Agent) SetLength(ctx context.Context, reqMessage *bossopenolt.BossRequest) (*bossopenolt.ExecResult, error) {
+>     logger.Debugw(ctx, "SetLength", log.Fields{"device-id": reqMessage.DeviceId})
+>     client, err := agent.adapterMgr.GetAdapterClient(ctx, agent.adapterEndpoint)
+>     if err != nil {
+>                 logger.Errorw(ctx, "SetLength-grpc-client-nil",
+>                         log.Fields{
+>                                 "error":       err,
+>                                 "device-id":   agent.deviceID,
+>                                 "device-type": agent.deviceType,
+>                         })
+>                 return &bossopenolt.ExecResult{}, err
+>         }
+> 
+> 
+>     return client.SetLength(ctx, reqMessage)
+> }
+> 
+> func (agent *Agent) GetLength(ctx context.Context, reqMessage *bossopenolt.BossRequest) (*bossopenolt.LengthResponse, error) {
+>     logger.Debugw(ctx, "GetLength", log.Fields{"device-id": reqMessage.DeviceId})
+>     client, err := agent.adapterMgr.GetAdapterClient(ctx, agent.adapterEndpoint)
+>     if err != nil {
+>                 logger.Errorw(ctx, "GetLength-grpc-client-nil",
+>                         log.Fields{
+>                                 "error":       err,
+>                                 "device-id":   agent.deviceID,
+>                                 "device-type": agent.deviceType,
+>                         })
+>                 return &bossopenolt.LengthResponse{}, err
+>         }
+> 
+> 
+>     return client.GetLength(ctx, reqMessage)
+> }
+> 
+> func (agent *Agent) SetQuietZone(ctx context.Context, reqMessage *bossopenolt.BossRequest) (*bossopenolt.ExecResult, error) {
+>     logger.Debugw(ctx, "SetQuietZone", log.Fields{"device-id": reqMessage.DeviceId})
+>     client, err := agent.adapterMgr.GetAdapterClient(ctx, agent.adapterEndpoint)
+>     if err != nil {
+>                 logger.Errorw(ctx, "SetQuietZone-grpc-client-nil",
+>                         log.Fields{
+>                                 "error":       err,
+>                                 "device-id":   agent.deviceID,
+>                                 "device-type": agent.deviceType,
+>                         })
+>                 return &bossopenolt.ExecResult{}, err
+>         }
+> 
+> 
+>     return client.SetQuietZone(ctx, reqMessage)
+> }
+> 
+> func (agent *Agent) GetQuietZone(ctx context.Context, reqMessage *bossopenolt.BossRequest) (*bossopenolt.QuietZoneResponse, error) {
+>     logger.Debugw(ctx, "GetQuietZone", log.Fields{"device-id": reqMessage.DeviceId})
+>     client, err := agent.adapterMgr.GetAdapterClient(ctx, agent.adapterEndpoint)
+>     if err != nil {
+>                 logger.Errorw(ctx, "GetQuietZone-grpc-client-nil",
+>                         log.Fields{
+>                                 "error":       err,
+>                                 "device-id":   agent.deviceID,
+>                                 "device-type": agent.deviceType,
+>                         })
+>                 return &bossopenolt.QuietZoneResponse{}, err
+>         }
+> 
+> 
+>     return client.GetQuietZone(ctx, reqMessage)
+> }
+> 
+> func (agent *Agent) SetFecMode(ctx context.Context, reqMessage *bossopenolt.BossRequest) (*bossopenolt.ExecResult, error) {
+>     logger.Debugw(ctx, "SetFecMode", log.Fields{"device-id": reqMessage.DeviceId})
+>     client, err := agent.adapterMgr.GetAdapterClient(ctx, agent.adapterEndpoint)
+>     if err != nil {
+>                 logger.Errorw(ctx, "SetFecMode-grpc-client-nil",
+>                         log.Fields{
+>                                 "error":       err,
+>                                 "device-id":   agent.deviceID,
+>                                 "device-type": agent.deviceType,
+>                         })
+>                 return &bossopenolt.ExecResult{}, err
+>         }
+> 
+> 
+>     return client.SetFecMode(ctx, reqMessage)
+> }
+> 
+> func (agent *Agent) GetFecMode(ctx context.Context, reqMessage *bossopenolt.BossRequest) (*bossopenolt.ModeResponse, error) {
+>     logger.Debugw(ctx, "GetFecMode", log.Fields{"device-id": reqMessage.DeviceId})
+>     client, err := agent.adapterMgr.GetAdapterClient(ctx, agent.adapterEndpoint)
+>     if err != nil {
+>                 logger.Errorw(ctx, "GetFecMode-grpc-client-nil",
+>                         log.Fields{
+>                                 "error":       err,
+>                                 "device-id":   agent.deviceID,
+>                                 "device-type": agent.deviceType,
+>                         })
+>                 return &bossopenolt.ModeResponse{}, err
+>         }
+> 
+> 
+>     return client.GetFecMode(ctx, reqMessage)
+> }
+> 
+> func (agent *Agent) AddOnu(ctx context.Context, reqMessage *bossopenolt.BossRequest) (*bossopenolt.AddOnuResponse, error) {
+>     logger.Debugw(ctx, "AddOnu", log.Fields{"device-id": reqMessage.DeviceId})
+>     client, err := agent.adapterMgr.GetAdapterClient(ctx, agent.adapterEndpoint)
+>     if err != nil {
+>                 logger.Errorw(ctx, "AddOnu-grpc-client-nil",
+>                         log.Fields{
+>                                 "error":       err,
+>                                 "device-id":   agent.deviceID,
+>                                 "device-type": agent.deviceType,
+>                         })
+>                 return &bossopenolt.AddOnuResponse{}, err
+>         }
+> 
+> 
+>     return client.AddOnu(ctx, reqMessage)
+> }
+> 
+> func (agent *Agent) DeleteOnu(ctx context.Context, reqMessage *bossopenolt.BossRequest) (*bossopenolt.ExecResult, error) {
+>     logger.Debugw(ctx, "DeleteOnu", log.Fields{"device-id": reqMessage.DeviceId})
+>     client, err := agent.adapterMgr.GetAdapterClient(ctx, agent.adapterEndpoint)
+>     if err != nil {
+>                 logger.Errorw(ctx, "DeleteOnu-grpc-client-nil",
+>                         log.Fields{
+>                                 "error":       err,
+>                                 "device-id":   agent.deviceID,
+>                                 "device-type": agent.deviceType,
+>                         })
+>                 return &bossopenolt.ExecResult{}, err
+>         }
+> 
+> 
+>     return client.DeleteOnu(ctx, reqMessage)
+> }
+> 
+> func (agent *Agent) AddOnuSla(ctx context.Context, reqMessage *bossopenolt.BossRequest) (*bossopenolt.ExecResult, error) {
+>     logger.Debugw(ctx, "AddOnuSla", log.Fields{"device-id": reqMessage.DeviceId})
+>     client, err := agent.adapterMgr.GetAdapterClient(ctx, agent.adapterEndpoint)
+>     if err != nil {
+>                 logger.Errorw(ctx, "AddOnuSla-grpc-client-nil",
+>                         log.Fields{
+>                                 "error":       err,
+>                                 "device-id":   agent.deviceID,
+>                                 "device-type": agent.deviceType,
+>                         })
+>                 return &bossopenolt.ExecResult{}, err
+>         }
+> 
+> 
+>     return client.AddOnuSla(ctx, reqMessage)
+> }
+> 
+> func (agent *Agent) ClearOnuSla(ctx context.Context, reqMessage *bossopenolt.BossRequest) (*bossopenolt.ExecResult, error) {
+>     logger.Debugw(ctx, "ClearOnuSla", log.Fields{"device-id": reqMessage.DeviceId})
+>     client, err := agent.adapterMgr.GetAdapterClient(ctx, agent.adapterEndpoint)
+>     if err != nil {
+>                 logger.Errorw(ctx, "ClearOnuSla-grpc-client-nil",
+>                         log.Fields{
+>                                 "error":       err,
+>                                 "device-id":   agent.deviceID,
+>                                 "device-type": agent.deviceType,
+>                         })
+>                 return &bossopenolt.ExecResult{}, err
+>         }
+> 
+> 
+>     return client.ClearOnuSla(ctx, reqMessage)
+> }
+> 
+> func (agent *Agent) GetSlaTable(ctx context.Context, reqMessage *bossopenolt.BossRequest) (*bossopenolt.RepeatedSlaResponse, error) {
+>     logger.Debugw(ctx, "GetSlaTable", log.Fields{"device-id": reqMessage.DeviceId})
+>     client, err := agent.adapterMgr.GetAdapterClient(ctx, agent.adapterEndpoint)
+>     if err != nil {
+>                 logger.Errorw(ctx, "GetSlaTable-grpc-client-nil",
+>                         log.Fields{
+>                                 "error":       err,
+>                                 "device-id":   agent.deviceID,
+>                                 "device-type": agent.deviceType,
+>                         })
+>                 return &bossopenolt.RepeatedSlaResponse{}, err
+>         }
+> 
+> 
+>     return client.GetSlaTable(ctx, reqMessage)
+> }
+> 
+> func (agent *Agent) SetOnuAllocid(ctx context.Context, reqMessage *bossopenolt.BossRequest) (*bossopenolt.ExecResult, error) {
+>     logger.Debugw(ctx, "SetOnuAllocid", log.Fields{"device-id": reqMessage.DeviceId})
+>     client, err := agent.adapterMgr.GetAdapterClient(ctx, agent.adapterEndpoint)
+>     if err != nil {
+>                 logger.Errorw(ctx, "SetOnuAllocid-grpc-client-nil",
+>                         log.Fields{
+>                                 "error":       err,
+>                                 "device-id":   agent.deviceID,
+>                                 "device-type": agent.deviceType,
+>                         })
+>                 return &bossopenolt.ExecResult{}, err
+>         }
+> 
+> 
+>     return client.SetOnuAllocid(ctx, reqMessage)
+> }
+> 
+> func (agent *Agent) DelOnuAllocid(ctx context.Context, reqMessage *bossopenolt.BossRequest) (*bossopenolt.ExecResult, error) {
+>     logger.Debugw(ctx, "DelOnuAllocid", log.Fields{"device-id": reqMessage.DeviceId})
+>     client, err := agent.adapterMgr.GetAdapterClient(ctx, agent.adapterEndpoint)
+>     if err != nil {
+>                 logger.Errorw(ctx, "DelOnuAllocid-grpc-client-nil",
+>                         log.Fields{
+>                                 "error":       err,
+>                                 "device-id":   agent.deviceID,
+>                                 "device-type": agent.deviceType,
+>                         })
+>                 return &bossopenolt.ExecResult{}, err
+>         }
+> 
+> 
+>     return client.DelOnuAllocid(ctx, reqMessage)
+> }
+> 
+> func (agent *Agent) SetOnuVssn(ctx context.Context, reqMessage *bossopenolt.BossRequest) (*bossopenolt.ExecResult, error) {
+>     logger.Debugw(ctx, "SetOnuVssn", log.Fields{"device-id": reqMessage.DeviceId})
+>     client, err := agent.adapterMgr.GetAdapterClient(ctx, agent.adapterEndpoint)
+>     if err != nil {
+>                 logger.Errorw(ctx, "SetOnuVssn-grpc-client-nil",
+>                         log.Fields{
+>                                 "error":       err,
+>                                 "device-id":   agent.deviceID,
+>                                 "device-type": agent.deviceType,
+>                         })
+>                 return &bossopenolt.ExecResult{}, err
+>         }
+> 
+> 
+>     return client.SetOnuVssn(ctx, reqMessage)
+> }
+> 
+> func (agent *Agent) GetOnuVssn(ctx context.Context, reqMessage *bossopenolt.BossRequest) (*bossopenolt.OnuVssnResponse, error) {
+>     logger.Debugw(ctx, "GetOnuVssn", log.Fields{"device-id": reqMessage.DeviceId})
+>     client, err := agent.adapterMgr.GetAdapterClient(ctx, agent.adapterEndpoint)
+>     if err != nil {
+>                 logger.Errorw(ctx, "GetOnuVssn-grpc-client-nil",
+>                         log.Fields{
+>                                 "error":       err,
+>                                 "device-id":   agent.deviceID,
+>                                 "device-type": agent.deviceType,
+>                         })
+>                 return &bossopenolt.OnuVssnResponse{}, err
+>         }
+> 
+> 
+>     return client.GetOnuVssn(ctx, reqMessage)
+> }
+> 
+> func (agent *Agent) GetOnuDistance(ctx context.Context, reqMessage *bossopenolt.BossRequest) (*bossopenolt.OnuDistResponse, error) {
+>     logger.Debugw(ctx, "GetOnuDistance", log.Fields{"device-id": reqMessage.DeviceId})
+>     client, err := agent.adapterMgr.GetAdapterClient(ctx, agent.adapterEndpoint)
+>     if err != nil {
+>                 logger.Errorw(ctx, "GetOnuDistance-grpc-client-nil",
+>                         log.Fields{
+>                                 "error":       err,
+>                                 "device-id":   agent.deviceID,
+>                                 "device-type": agent.deviceType,
+>                         })
+>                 return &bossopenolt.OnuDistResponse{}, err
+>         }
+> 
+> 
+>     return client.GetOnuDistance(ctx, reqMessage)
+> }
+> 
+> func (agent *Agent) SetBurstDelimiter(ctx context.Context, reqMessage *bossopenolt.BossRequest) (*bossopenolt.ExecResult, error) {
+>     logger.Debugw(ctx, "SetBurstDelimiter", log.Fields{"device-id": reqMessage.DeviceId})
+>     client, err := agent.adapterMgr.GetAdapterClient(ctx, agent.adapterEndpoint)
+>     if err != nil {
+>                 logger.Errorw(ctx, "SetBurstDelimiter-grpc-client-nil",
+>                         log.Fields{
+>                                 "error":       err,
+>                                 "device-id":   agent.deviceID,
+>                                 "device-type": agent.deviceType,
+>                         })
+>                 return &bossopenolt.ExecResult{}, err
+>         }
+> 
+> 
+>     return client.SetBurstDelimiter(ctx, reqMessage)
+> }
+> 
+> func (agent *Agent) GetBurstDelimiter(ctx context.Context, reqMessage *bossopenolt.BossRequest) (*bossopenolt.BurstDelimitResponse, error) {
+>     logger.Debugw(ctx, "GetBurstDelimiter", log.Fields{"device-id": reqMessage.DeviceId})
+>     client, err := agent.adapterMgr.GetAdapterClient(ctx, agent.adapterEndpoint)
+>     if err != nil {
+>                 logger.Errorw(ctx, "GetBurstDelimiter-grpc-client-nil",
+>                         log.Fields{
+>                                 "error":       err,
+>                                 "device-id":   agent.deviceID,
+>                                 "device-type": agent.deviceType,
+>                         })
+>                 return &bossopenolt.BurstDelimitResponse{}, err
+>         }
+> 
+> 
+>     return client.GetBurstDelimiter(ctx, reqMessage)
+> }
+> 
+> func (agent *Agent) SetBurstPreamble(ctx context.Context, reqMessage *bossopenolt.BossRequest) (*bossopenolt.ExecResult, error) {
+>     logger.Debugw(ctx, "SetBurstPreamble", log.Fields{"device-id": reqMessage.DeviceId})
+>     client, err := agent.adapterMgr.GetAdapterClient(ctx, agent.adapterEndpoint)
+>     if err != nil {
+>                 logger.Errorw(ctx, "SetBurstPreamble-grpc-client-nil",
+>                         log.Fields{
+>                                 "error":       err,
+>                                 "device-id":   agent.deviceID,
+>                                 "device-type": agent.deviceType,
+>                         })
+>                 return &bossopenolt.ExecResult{}, err
+>         }
+> 
+> 
+>     return client.SetBurstPreamble(ctx, reqMessage)
+> }
+> 
+> func (agent *Agent) GetBurstPreamble(ctx context.Context, reqMessage *bossopenolt.BossRequest) (*bossopenolt.BurstPreambleResponse, error) {
+>     logger.Debugw(ctx, "GetBurstPreamble", log.Fields{"device-id": reqMessage.DeviceId})
+>     client, err := agent.adapterMgr.GetAdapterClient(ctx, agent.adapterEndpoint)
+>     if err != nil {
+>                 logger.Errorw(ctx, "GetBurstPreamble-grpc-client-nil",
+>                         log.Fields{
+>                                 "error":       err,
+>                                 "device-id":   agent.deviceID,
+>                                 "device-type": agent.deviceType,
+>                         })
+>                 return &bossopenolt.BurstPreambleResponse{}, err
+>         }
+> 
+> 
+>     return client.GetBurstPreamble(ctx, reqMessage)
+> }
+> 
+> func (agent *Agent) SetBurstVersion(ctx context.Context, reqMessage *bossopenolt.BossRequest) (*bossopenolt.ExecResult, error) {
+>     logger.Debugw(ctx, "SetBurstVersion", log.Fields{"device-id": reqMessage.DeviceId})
+>     client, err := agent.adapterMgr.GetAdapterClient(ctx, agent.adapterEndpoint)
+>     if err != nil {
+>                 logger.Errorw(ctx, "SetBurstVersion-grpc-client-nil",
+>                         log.Fields{
+>                                 "error":       err,
+>                                 "device-id":   agent.deviceID,
+>                                 "device-type": agent.deviceType,
+>                         })
+>                 return &bossopenolt.ExecResult{}, err
+>         }
+> 
+> 
+>     return client.SetBurstVersion(ctx, reqMessage)
+> }
+> 
+> func (agent *Agent) GetBurstVersion(ctx context.Context, reqMessage *bossopenolt.BossRequest) (*bossopenolt.BurstVersionResponse, error) {
+>     logger.Debugw(ctx, "GetBurstVersion", log.Fields{"device-id": reqMessage.DeviceId})
+>     client, err := agent.adapterMgr.GetAdapterClient(ctx, agent.adapterEndpoint)
+>     if err != nil {
+>                 logger.Errorw(ctx, "GetBurstVersion-grpc-client-nil",
+>                         log.Fields{
+>                                 "error":       err,
+>                                 "device-id":   agent.deviceID,
+>                                 "device-type": agent.deviceType,
+>                         })
+>                 return &bossopenolt.BurstVersionResponse{}, err
+>         }
+> 
+> 
+>     return client.GetBurstVersion(ctx, reqMessage)
+> }
+> 
+> func (agent *Agent) SetBurstProfile(ctx context.Context, reqMessage *bossopenolt.BossRequest) (*bossopenolt.ExecResult, error) {
+>     logger.Debugw(ctx, "SetBurstProfile", log.Fields{"device-id": reqMessage.DeviceId})
+>     client, err := agent.adapterMgr.GetAdapterClient(ctx, agent.adapterEndpoint)
+>     if err != nil {
+>                 logger.Errorw(ctx, "SetBurstProfile-grpc-client-nil",
+>                         log.Fields{
+>                                 "error":       err,
+>                                 "device-id":   agent.deviceID,
+>                                 "device-type": agent.deviceType,
+>                         })
+>                 return &bossopenolt.ExecResult{}, err
+>         }
+> 
+> 
+>     return client.SetBurstProfile(ctx, reqMessage)
+> }
+> 
+> func (agent *Agent) GetBurstProfile(ctx context.Context, reqMessage *bossopenolt.BossRequest) (*bossopenolt.BurstProfileResponse, error) {
+>     logger.Debugw(ctx, "GetBurstProfile", log.Fields{"device-id": reqMessage.DeviceId})
+>     client, err := agent.adapterMgr.GetAdapterClient(ctx, agent.adapterEndpoint)
+>     if err != nil {
+>                 logger.Errorw(ctx, "GetBurstProfile-grpc-client-nil",
+>                         log.Fields{
+>                                 "error":       err,
+>                                 "device-id":   agent.deviceID,
+>                                 "device-type": agent.deviceType,
+>                         })
+>                 return &bossopenolt.BurstProfileResponse{}, err
+>         }
+> 
+> 
+>     return client.GetBurstProfile(ctx, reqMessage)
+> }
+> 
+> func (agent *Agent) GetRegisterStatus(ctx context.Context, reqMessage *bossopenolt.BossRequest) (*bossopenolt.RegisterStatusResponse, error) {
+>     logger.Debugw(ctx, "GetRegisterStatus", log.Fields{"device-id": reqMessage.DeviceId})
+>     client, err := agent.adapterMgr.GetAdapterClient(ctx, agent.adapterEndpoint)
+>     if err != nil {
+>                 logger.Errorw(ctx, "GetRegisterStatus-grpc-client-nil",
+>                         log.Fields{
+>                                 "error":       err,
+>                                 "device-id":   agent.deviceID,
+>                                 "device-type": agent.deviceType,
+>                         })
+>                 return &bossopenolt.RegisterStatusResponse{}, err
+>         }
+> 
+> 
+>     return client.GetRegisterStatus(ctx, reqMessage)
+> }
+> 
+> func (agent *Agent) GetOnuInfo(ctx context.Context, reqMessage *bossopenolt.BossRequest) (*bossopenolt.OnuInfoResponse, error) {
+>     logger.Debugw(ctx, "GetOnuInfo", log.Fields{"device-id": reqMessage.DeviceId})
+>     client, err := agent.adapterMgr.GetAdapterClient(ctx, agent.adapterEndpoint)
+>     if err != nil {
+>                 logger.Errorw(ctx, "GetOnuInfo-grpc-client-nil",
+>                         log.Fields{
+>                                 "error":       err,
+>                                 "device-id":   agent.deviceID,
+>                                 "device-type": agent.deviceType,
+>                         })
+>                 return &bossopenolt.OnuInfoResponse{}, err
+>         }
+> 
+> 
+>     return client.GetOnuInfo(ctx, reqMessage)
+> }
+> 
+> func (agent *Agent) GetOmciStatus(ctx context.Context, reqMessage *bossopenolt.BossRequest) (*bossopenolt.StatusResponse, error) {
+>     logger.Debugw(ctx, "GetOmciStatus", log.Fields{"device-id": reqMessage.DeviceId})
+>     client, err := agent.adapterMgr.GetAdapterClient(ctx, agent.adapterEndpoint)
+>     if err != nil {
+>                 logger.Errorw(ctx, "GetOmciStatus-grpc-client-nil",
+>                         log.Fields{
+>                                 "error":       err,
+>                                 "device-id":   agent.deviceID,
+>                                 "device-type": agent.deviceType,
+>                         })
+>                 return &bossopenolt.StatusResponse{}, err
+>         }
+> 
+> 
+>     return client.GetOmciStatus(ctx, reqMessage)
+> }
+> 
+> func (agent *Agent) SetDsOmciOnu(ctx context.Context, reqMessage *bossopenolt.BossRequest) (*bossopenolt.ExecResult, error) {
+>     logger.Debugw(ctx, "SetDsOmciOnu", log.Fields{"device-id": reqMessage.DeviceId})
+>     client, err := agent.adapterMgr.GetAdapterClient(ctx, agent.adapterEndpoint)
+>     if err != nil {
+>                 logger.Errorw(ctx, "SetDsOmciOnu-grpc-client-nil",
+>                         log.Fields{
+>                                 "error":       err,
+>                                 "device-id":   agent.deviceID,
+>                                 "device-type": agent.deviceType,
+>                         })
+>                 return &bossopenolt.ExecResult{}, err
+>         }
+> 
+> 
+>     return client.SetDsOmciOnu(ctx, reqMessage)
+> }
+> 
+> func (agent *Agent) SetDsOmciData(ctx context.Context, reqMessage *bossopenolt.BossRequest) (*bossopenolt.ExecResult, error) {
+>     logger.Debugw(ctx, "SetDsOmciData", log.Fields{"device-id": reqMessage.DeviceId})
+>     client, err := agent.adapterMgr.GetAdapterClient(ctx, agent.adapterEndpoint)
+>     if err != nil {
+>                 logger.Errorw(ctx, "SetDsOmciData-grpc-client-nil",
+>                         log.Fields{
+>                                 "error":       err,
+>                                 "device-id":   agent.deviceID,
+>                                 "device-type": agent.deviceType,
+>                         })
+>                 return &bossopenolt.ExecResult{}, err
+>         }
+> 
+> 
+>     return client.SetDsOmciData(ctx, reqMessage)
+> }
+> 
+> func (agent *Agent) GetUsOmciData(ctx context.Context, reqMessage *bossopenolt.BossRequest) (*bossopenolt.OmciDataResponse, error) {
+>     logger.Debugw(ctx, "GetUsOmciData", log.Fields{"device-id": reqMessage.DeviceId})
+>     client, err := agent.adapterMgr.GetAdapterClient(ctx, agent.adapterEndpoint)
+>     if err != nil {
+>                 logger.Errorw(ctx, "GetUsOmciData-grpc-client-nil",
+>                         log.Fields{
+>                                 "error":       err,
+>                                 "device-id":   agent.deviceID,
+>                                 "device-type": agent.deviceType,
+>                         })
+>                 return &bossopenolt.OmciDataResponse{}, err
+>         }
+> 
+> 
+>     return client.GetUsOmciData(ctx, reqMessage)
+> }
+> 
+> func (agent *Agent) SetTod(ctx context.Context, reqMessage *bossopenolt.BossRequest) (*bossopenolt.ExecResult, error) {
+>     logger.Debugw(ctx, "SetTod", log.Fields{"device-id": reqMessage.DeviceId})
+>     client, err := agent.adapterMgr.GetAdapterClient(ctx, agent.adapterEndpoint)
+>     if err != nil {
+>                 logger.Errorw(ctx, "SetTod-grpc-client-nil",
+>                         log.Fields{
+>                                 "error":       err,
+>                                 "device-id":   agent.deviceID,
+>                                 "device-type": agent.deviceType,
+>                         })
+>                 return &bossopenolt.ExecResult{}, err
+>         }
+> 
+> 
+>     return client.SetTod(ctx, reqMessage)
+> }
+> 
+> func (agent *Agent) GetTod(ctx context.Context, reqMessage *bossopenolt.BossRequest) (*bossopenolt.TodResponse, error) {
+>     logger.Debugw(ctx, "GetTod", log.Fields{"device-id": reqMessage.DeviceId})
+>     client, err := agent.adapterMgr.GetAdapterClient(ctx, agent.adapterEndpoint)
+>     if err != nil {
+>                 logger.Errorw(ctx, "GetTod-grpc-client-nil",
+>                         log.Fields{
+>                                 "error":       err,
+>                                 "device-id":   agent.deviceID,
+>                                 "device-type": agent.deviceType,
+>                         })
+>                 return &bossopenolt.TodResponse{}, err
+>         }
+> 
+> 
+>     return client.GetTod(ctx, reqMessage)
+> }
+> 
+> func (agent *Agent) SetDataMode(ctx context.Context, reqMessage *bossopenolt.BossRequest) (*bossopenolt.ExecResult, error) {
+>     logger.Debugw(ctx, "SetDataMode", log.Fields{"device-id": reqMessage.DeviceId})
+>     client, err := agent.adapterMgr.GetAdapterClient(ctx, agent.adapterEndpoint)
+>     if err != nil {
+>                 logger.Errorw(ctx, "SetDataMode-grpc-client-nil",
+>                         log.Fields{
+>                                 "error":       err,
+>                                 "device-id":   agent.deviceID,
+>                                 "device-type": agent.deviceType,
+>                         })
+>                 return &bossopenolt.ExecResult{}, err
+>         }
+> 
+> 
+>     return client.SetDataMode(ctx, reqMessage)
+> }
+> 
+> func (agent *Agent) GetDataMode(ctx context.Context, reqMessage *bossopenolt.BossRequest) (*bossopenolt.ModeResponse, error) {
+>     logger.Debugw(ctx, "GetDataMode", log.Fields{"device-id": reqMessage.DeviceId})
+>     client, err := agent.adapterMgr.GetAdapterClient(ctx, agent.adapterEndpoint)
+>     if err != nil {
+>                 logger.Errorw(ctx, "GetDataMode-grpc-client-nil",
+>                         log.Fields{
+>                                 "error":       err,
+>                                 "device-id":   agent.deviceID,
+>                                 "device-type": agent.deviceType,
+>                         })
+>                 return &bossopenolt.ModeResponse{}, err
+>         }
+> 
+> 
+>     return client.GetDataMode(ctx, reqMessage)
+> }
+> 
+> func (agent *Agent) SetFecDecMode(ctx context.Context, reqMessage *bossopenolt.BossRequest) (*bossopenolt.ExecResult, error) {
+>     logger.Debugw(ctx, "SetFecDecMode", log.Fields{"device-id": reqMessage.DeviceId})
+>     client, err := agent.adapterMgr.GetAdapterClient(ctx, agent.adapterEndpoint)
+>     if err != nil {
+>                 logger.Errorw(ctx, "SetFecDecMode-grpc-client-nil",
+>                         log.Fields{
+>                                 "error":       err,
+>                                 "device-id":   agent.deviceID,
+>                                 "device-type": agent.deviceType,
+>                         })
+>                 return &bossopenolt.ExecResult{}, err
+>         }
+> 
+> 
+>     return client.SetFecDecMode(ctx, reqMessage)
+> }
+> 
+> func (agent *Agent) GetFecDecMode(ctx context.Context, reqMessage *bossopenolt.BossRequest) (*bossopenolt.ModeResponse, error) {
+>     logger.Debugw(ctx, "GetFecDecMode", log.Fields{"device-id": reqMessage.DeviceId})
+>     client, err := agent.adapterMgr.GetAdapterClient(ctx, agent.adapterEndpoint)
+>     if err != nil {
+>                 logger.Errorw(ctx, "GetFecDecMode-grpc-client-nil",
+>                         log.Fields{
+>                                 "error":       err,
+>                                 "device-id":   agent.deviceID,
+>                                 "device-type": agent.deviceType,
+>                         })
+>                 return &bossopenolt.ModeResponse{}, err
+>         }
+> 
+> 
+>     return client.GetFecDecMode(ctx, reqMessage)
+> }
+> 
+> func (agent *Agent) SetDelimiter(ctx context.Context, reqMessage *bossopenolt.BossRequest) (*bossopenolt.ExecResult, error) {
+>     logger.Debugw(ctx, "SetDelimiter", log.Fields{"device-id": reqMessage.DeviceId})
+>     client, err := agent.adapterMgr.GetAdapterClient(ctx, agent.adapterEndpoint)
+>     if err != nil {
+>                 logger.Errorw(ctx, "SetDelimiter-grpc-client-nil",
+>                         log.Fields{
+>                                 "error":       err,
+>                                 "device-id":   agent.deviceID,
+>                                 "device-type": agent.deviceType,
+>                         })
+>                 return &bossopenolt.ExecResult{}, err
+>         }
+> 
+> 
+>     return client.SetDelimiter(ctx, reqMessage)
+> }
+> 
+> func (agent *Agent) GetDelimiter(ctx context.Context, reqMessage *bossopenolt.BossRequest) (*bossopenolt.FecDecResponse, error) {
+>     logger.Debugw(ctx, "GetDelimiter", log.Fields{"device-id": reqMessage.DeviceId})
+>     client, err := agent.adapterMgr.GetAdapterClient(ctx, agent.adapterEndpoint)
+>     if err != nil {
+>                 logger.Errorw(ctx, "GetDelimiter-grpc-client-nil",
+>                         log.Fields{
+>                                 "error":       err,
+>                                 "device-id":   agent.deviceID,
+>                                 "device-type": agent.deviceType,
+>                         })
+>                 return &bossopenolt.FecDecResponse{}, err
+>         }
+> 
+> 
+>     return client.GetDelimiter(ctx, reqMessage)
+> }
+> 
+> func (agent *Agent) SetErrorPermit(ctx context.Context, reqMessage *bossopenolt.BossRequest) (*bossopenolt.ExecResult, error) {
+>     logger.Debugw(ctx, "SetErrorPermit", log.Fields{"device-id": reqMessage.DeviceId})
+>     client, err := agent.adapterMgr.GetAdapterClient(ctx, agent.adapterEndpoint)
+>     if err != nil {
+>                 logger.Errorw(ctx, "SetErrorPermit-grpc-client-nil",
+>                         log.Fields{
+>                                 "error":       err,
+>                                 "device-id":   agent.deviceID,
+>                                 "device-type": agent.deviceType,
+>                         })
+>                 return &bossopenolt.ExecResult{}, err
+>         }
+> 
+> 
+>     return client.SetErrorPermit(ctx, reqMessage)
+> }
+> 
+> func (agent *Agent) GetErrorPermit(ctx context.Context, reqMessage *bossopenolt.BossRequest) (*bossopenolt.ErrorPermitResponse, error) {
+>     logger.Debugw(ctx, "GetErrorPermit", log.Fields{"device-id": reqMessage.DeviceId})
+>     client, err := agent.adapterMgr.GetAdapterClient(ctx, agent.adapterEndpoint)
+>     if err != nil {
+>                 logger.Errorw(ctx, "GetErrorPermit-grpc-client-nil",
+>                         log.Fields{
+>                                 "error":       err,
+>                                 "device-id":   agent.deviceID,
+>                                 "device-type": agent.deviceType,
+>                         })
+>                 return &bossopenolt.ErrorPermitResponse{}, err
+>         }
+> 
+> 
+>     return client.GetErrorPermit(ctx, reqMessage)
+> }
+> 
+> func (agent *Agent) SetPmControl(ctx context.Context, reqMessage *bossopenolt.BossRequest) (*bossopenolt.ExecResult, error) {
+>     logger.Debugw(ctx, "SetPmControl", log.Fields{"device-id": reqMessage.DeviceId})
+>     client, err := agent.adapterMgr.GetAdapterClient(ctx, agent.adapterEndpoint)
+>     if err != nil {
+>                 logger.Errorw(ctx, "SetPmControl-grpc-client-nil",
+>                         log.Fields{
+>                                 "error":       err,
+>                                 "device-id":   agent.deviceID,
+>                                 "device-type": agent.deviceType,
+>                         })
+>                 return &bossopenolt.ExecResult{}, err
+>         }
+> 
+> 
+>     return client.SetPmControl(ctx, reqMessage)
+> }
+> 
+> func (agent *Agent) GetPmControl(ctx context.Context, reqMessage *bossopenolt.BossRequest) (*bossopenolt.PmControlResponse, error) {
+>     logger.Debugw(ctx, "GetPmControl", log.Fields{"device-id": reqMessage.DeviceId})
+>     client, err := agent.adapterMgr.GetAdapterClient(ctx, agent.adapterEndpoint)
+>     if err != nil {
+>                 logger.Errorw(ctx, "GetPmControl-grpc-client-nil",
+>                         log.Fields{
+>                                 "error":       err,
+>                                 "device-id":   agent.deviceID,
+>                                 "device-type": agent.deviceType,
+>                         })
+>                 return &bossopenolt.PmControlResponse{}, err
+>         }
+> 
+> 
+>     return client.GetPmControl(ctx, reqMessage)
+> }
+> 
+> func (agent *Agent) GetPmTable(ctx context.Context, reqMessage *bossopenolt.BossRequest) (*bossopenolt.PmTableResponse, error) {
+>     logger.Debugw(ctx, "GetPmTable", log.Fields{"device-id": reqMessage.DeviceId})
+>     client, err := agent.adapterMgr.GetAdapterClient(ctx, agent.adapterEndpoint)
+>     if err != nil {
+>                 logger.Errorw(ctx, "GetPmTable-grpc-client-nil",
+>                         log.Fields{
+>                                 "error":       err,
+>                                 "device-id":   agent.deviceID,
+>                                 "device-type": agent.deviceType,
+>                         })
+>                 return &bossopenolt.PmTableResponse{}, err
+>         }
+> 
+> 
+>     return client.GetPmTable(ctx, reqMessage)
+> }
+> 
+> func (agent *Agent) SetSAOn(ctx context.Context, reqMessage *bossopenolt.BossRequest) (*bossopenolt.ExecResult, error) {
+>     logger.Debugw(ctx, "SetSAOn", log.Fields{"device-id": reqMessage.DeviceId})
+>     client, err := agent.adapterMgr.GetAdapterClient(ctx, agent.adapterEndpoint)
+>     if err != nil {
+>                 logger.Errorw(ctx, "SetSAOn-grpc-client-nil",
+>                         log.Fields{
+>                                 "error":       err,
+>                                 "device-id":   agent.deviceID,
+>                                 "device-type": agent.deviceType,
+>                         })
+>                 return &bossopenolt.ExecResult{}, err
+>         }
+> 
+> 
+>     return client.SetSAOn(ctx, reqMessage)
+> }
+> 
+> func (agent *Agent) SetSAOff(ctx context.Context, reqMessage *bossopenolt.BossRequest) (*bossopenolt.ExecResult, error) {
+>     logger.Debugw(ctx, "SetSAOff", log.Fields{"device-id": reqMessage.DeviceId})
+>     client, err := agent.adapterMgr.GetAdapterClient(ctx, agent.adapterEndpoint)
+>     if err != nil {
+>                 logger.Errorw(ctx, "SetSAOff-grpc-client-nil",
+>                         log.Fields{
+>                                 "error":       err,
+>                                 "device-id":   agent.deviceID,
+>                                 "device-type": agent.deviceType,
+>                         })
+>                 return &bossopenolt.ExecResult{}, err
+>         }
+> 
+> 
+>     return client.SetSAOff(ctx, reqMessage)
+> }
+> 
+> func (agent *Agent) createDeviceHandler(ctx context.Context) error {
+> 	var err error
+>             var desc string
+>             var prevAdminState, currAdminState common.AdminState_Types
+>             requestStatus := &common.OperationResp{Code: common.OperationResp_OPERATION_FAILURE}
+> 
+>             defer func() { agent.logDeviceUpdate(ctx, &prevAdminState, &currAdminState, requestStatus, err, desc) }()
+> 
+> 	if err := agent.requestQueue.WaitForGreenLight(ctx); err != nil {
+> 		return err
+> 	}
+> 	logger.Debugw(ctx, "createDeviceHandler", log.Fields{"device-id": agent.deviceID})
+> 
+> 	oldDevice := agent.getDeviceReadOnlyWithoutLock()
+> 	prevAdminState = oldDevice.AdminState
+> 
+>             if !agent.proceedWithRequest(oldDevice) {
+>                    agent.requestQueue.RequestComplete()
+>                    err = status.Errorf(codes.FailedPrecondition, "cannot complete operation as device deletion is in progress or reconciling is in progress/failed: %s", agent.deviceID)
+>                    return err
+>             }
+> 
+> 	if oldDevice.AdminState == voltha.AdminState_ENABLED &&oldDevice.OperStatus != voltha.OperStatus_FAILED{
+> 		logger.Warnw(ctx, "device-already-enabled", log.Fields{"device-id": agent.deviceID})
+> 		agent.requestQueue.RequestComplete()
+> 		return status.Error(codes.FailedPrecondition, fmt.Sprintf("cannot-enable-an-already-enabled-device: %s", oldDevice.Id))
+> 	}
+> 	
+> 	// First figure out which adapter will handle this device type.  We do it at this stage as allow devices to be
+> 	// pre-provisioned with the required adapter not registered.   At this stage, since we need to communicate
+> 	// with the adapter then we need to know the adapter that will handle this request
+> 	_, err = agent.adapterMgr.GetAdapterType(oldDevice.Type)
+> 	if err != nil {
+> 		agent.requestQueue.RequestComplete()
+> 		return err
+> 	}
+> 
+> 	newDevice := agent.cloneDeviceWithoutLock()
+> 	if newDevice.AdapterEndpoint == "" {
+>                 if newDevice.AdapterEndpoint, err = agent.adapterMgr.GetAdapterEndpoint(ctx, newDevice.Id, newDevice.Type); err != nil {
+>                         agent.requestQueue.RequestComplete()
+>                         return err
+>                 }
+>                 agent.adapterEndpoint = newDevice.AdapterEndpoint
+>             }
+> 
+> 	// Update the Admin State and set the operational state to activating before sending the request to the Adapters
+> 	newDevice.AdminState = voltha.AdminState_ENABLED
+> 	newDevice.OperStatus = voltha.OperStatus_ACTIVATING
+> 	if err := agent.updateDeviceAndReleaseLock(ctx, newDevice); err != nil {
+> 		return err
+> 	}
+> 
+> 	// Adopt the device if it was in pre-provision state.  In all other cases, try to re-enable it.
+> 	client, err := agent.adapterMgr.GetAdapterClient(ctx, agent.adapterEndpoint)
+>             if err != nil {
+>                 logger.Errorw(ctx, "grpc-client-nil",
+>                         log.Fields{
+>                                 "error":            err,
+>                                 "device-id":        agent.deviceID,
+>                                 "device-type":      agent.deviceType,
+>                                 "adapter-endpoint": newDevice.AdapterEndpoint,
+>                         })
+>                 agent.requestQueue.RequestComplete()
+>                 return err
+>            }
+> 	//subctx, "cancel := context.WithTimeout(log.WithSpanFromContext(context.Background(), ctx), agent.defaultTimeout)
+> 	subctx, cancel := context.WithTimeout(coreutils.WithAllMetadataFromContext(ctx), agent.rpcTimeout)
+>         	requestStatus.Code = common.OperationResp_OPERATION_IN_PROGRESS
+> 
+> 	_, err = client.CreateDeviceHandler(subctx, newDevice)
+> 	if err != nil {
+> 		cancel()
+> 		return err
+> 	}
+> 	 if err = agent.updateDeviceAndReleaseLock(ctx, newDevice); err != nil {
+>                 return err
+>             }
+>             currAdminState = newDevice.AdminState
+> 
+> 	// Wait for response
+> //	logger.Warnw(ctx, "result", log.Fields{"ch": ch})
+> 
+> 	return nil
+> }
+> 
+> func (agent *Agent) SetSliceBw(ctx context.Context, reqMessage *bossopenolt.BossRequest) (*bossopenolt.ExecResult, error) {
+>     logger.Debugw(ctx, "SetSliceBw", log.Fields{"device-id": reqMessage.DeviceId})
+>     client, err := agent.adapterMgr.GetAdapterClient(ctx, agent.adapterEndpoint)
+>     if err != nil {
+>                 logger.Errorw(ctx, "SetSliceBw-grpc-client-nil",
+>                         log.Fields{
+>                                 "error":       err,
+>                                 "device-id":   agent.deviceID,
+>                                 "device-type": agent.deviceType,
+>                         })
+>                 return &bossopenolt.ExecResult{}, err
+>         }
+> 
+> 
+>     return client.SetSliceBw(ctx, reqMessage)
+> }
+> 
+> func (agent *Agent) GetSliceBw(ctx context.Context, reqMessage *bossopenolt.BossRequest) (*bossopenolt.GetSliceBwResponse, error) {
+>     logger.Debugw(ctx, "GetSliceBw", log.Fields{"device-id": reqMessage.DeviceId})
+>     client, err := agent.adapterMgr.GetAdapterClient(ctx, agent.adapterEndpoint)
+>     if err != nil {
+>                 logger.Errorw(ctx, "GetSliceBw-grpc-client-nil",
+>                         log.Fields{
+>                                 "error":       err,
+>                                 "device-id":   agent.deviceID,
+>                                 "device-type": agent.deviceType,
+>                         })
+>                 return &bossopenolt.GetSliceBwResponse{}, err
+>         }
+> 
+> 
+>     return client.GetSliceBw(ctx, reqMessage)
+> }
+> 
+> func (agent *Agent) SetSlaV2(ctx context.Context, reqMessage *bossopenolt.BossRequest) (*bossopenolt.SlaV2Response, error) {
+>     logger.Debugw(ctx, "SetSlaV2", log.Fields{"device-id": reqMessage.DeviceId})
+>     client, err := agent.adapterMgr.GetAdapterClient(ctx, agent.adapterEndpoint)
+>     if err != nil {
+>                 logger.Errorw(ctx, "SetSlaV2-grpc-client-nil",
+>                         log.Fields{
+>                                 "error":       err,
+>                                 "device-id":   agent.deviceID,
+>                                 "device-type": agent.deviceType,
+>                         })
+>                 return &bossopenolt.SlaV2Response{}, err
+>         }
+> 
+> 
+>     return client.SetSlaV2(ctx, reqMessage)
+> }
+> 
+> func (agent *Agent) GetSlaV2(ctx context.Context, reqMessage *bossopenolt.BossRequest) (*bossopenolt.SlaV2Response, error) {
+>     logger.Debugw(ctx, "GetSlaV2", log.Fields{"device-id": reqMessage.DeviceId})
+>     client, err := agent.adapterMgr.GetAdapterClient(ctx, agent.adapterEndpoint)
+>     if err != nil {
+>                 logger.Errorw(ctx, "GetSlaV2-grpc-client-nil",
+>                         log.Fields{
+>                                 "error":       err,
+>                                 "device-id":   agent.deviceID,
+>                                 "device-type": agent.deviceType,
+>                         })
+>                 return &bossopenolt.SlaV2Response{}, err
+>         }
+> 
+> 
+>     return client.GetSlaV2(ctx, reqMessage)
+> }
+> 
