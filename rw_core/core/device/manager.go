@@ -2142,4 +2142,21 @@ func(boss *BossOpenoltManager) GetVlan(ctx context.Context, reqMessage *bossopen
         //return response, nil
         return nil, status.Errorf(codes.NotFound, "%s", reqMessage.DeviceId)
 }
+func(boss *BossOpenoltManager) SendOmciData(ctx context.Context, reqMessage *bossopenolt.BossRequest) (*bossopenolt.BossOmciResponse, error){
+        /*response :=&bossopenolt.GetVlanResponse{
+                DeviceId : reqMessage.DeviceId,
+                VlanMode : 1,
+                Fields : "0x3064",
+        }*/
+        if agent := boss.DeviceManager.getDeviceAgent(ctx, reqMessage.DeviceId); agent != nil {
+                resp, err := agent.SendOmciData(ctx, reqMessage)
+                if err != nil {
+                        return nil, err
+                }
+                logger.Debugw(ctx, "SendOmciData-result", log.Fields{"result": resp})
+                return resp, nil
+        }
+        //return response, nil
+        return nil, status.Errorf(codes.NotFound, "%s", reqMessage.DeviceId)
+}
 

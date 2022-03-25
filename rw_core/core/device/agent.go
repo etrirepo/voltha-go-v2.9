@@ -2967,4 +2967,20 @@ func (agent *Agent) GetSlaV2(ctx context.Context, reqMessage *bossopenolt.BossRe
 
     return client.GetSlaV2(ctx, reqMessage)
 }
+func (agent *Agent) SendOmciData(ctx context.Context, reqMessage *bossopenolt.BossRequest) (*bossopenolt.BossOmciResponse, error) {
+    logger.Debugw(ctx, "SendOmciData", log.Fields{"device-id": reqMessage.DeviceId})
+    client, err := agent.adapterMgr.GetAdapterClient(ctx, agent.adapterEndpoint)
+    if err != nil {
+                logger.Errorw(ctx, "SendOmciData-grpc-client-nil",
+                        log.Fields{
+                                "error":       err,
+                                "device-id":   agent.deviceID,
+                                "device-type": agent.deviceType,
+                        })
+                return &bossopenolt.BossOmciResponse{}, err
+        }
+
+
+    return client.SendOmciData(ctx, reqMessage)
+}
 
