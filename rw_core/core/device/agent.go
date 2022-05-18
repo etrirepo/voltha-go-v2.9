@@ -2815,89 +2815,114 @@ func (agent *Agent) SetSAOff(ctx context.Context, reqMessage *bossopenolt.BossRe
 }
 
 func (agent *Agent) createDeviceHandler(ctx context.Context) (*empty.Empty,error) {
-	var err error
-            var desc string
-            var prevAdminState, currAdminState common.AdminState_Types
-            requestStatus := &common.OperationResp{Code: common.OperationResp_OPERATION_FAILURE}
+  var err error
+  var desc string
+  var prevAdminState, currAdminState common.AdminState_Types
+  requestStatus := &common.OperationResp{Code: common.OperationResp_OPERATION_FAILURE}
 
-            defer func() { agent.logDeviceUpdate(ctx, &prevAdminState, &currAdminState, requestStatus, err, desc) }()
+  defer func() { agent.logDeviceUpdate(ctx, &prevAdminState, &currAdminState, requestStatus, err, desc) }()
 
-	if err := agent.requestQueue.WaitForGreenLight(ctx); err != nil {
-		return nil,err
-	}
-	logger.Debugw(ctx, "createDeviceHandler", log.Fields{"device-id": agent.deviceID})
+  if err := agent.requestQueue.WaitForGreenLight(ctx); err != nil {
+    return nil,err
+  }
+  logger.Debugw(ctx, "createDeviceHandler", log.Fields{"device-id": agent.deviceID})
 
-	oldDevice := agent.getDeviceReadOnlyWithoutLock()
-	prevAdminState = oldDevice.AdminState
+  oldDevice := agent.getDeviceReadOnlyWithoutLock()
+  prevAdminState = oldDevice.AdminState
 
-            if !agent.proceedWithRequest(oldDevice) {
-                   agent.requestQueue.RequestComplete()
-                   err = status.Errorf(codes.FailedPrecondition, "cannot complete operation as device deletion is in progress or reconciling is in progress/failed: %s", agent.deviceID)
-                   return nil,err
-            }
+  if !agent.proceedWithRequest(oldDevice) {
+    agent.requestQueue.RequestComplete()
+    err = status.Errorf(codes.FailedPrecondition, "cannot complete operation as device deletion is in progress or reconciling is in progress/failed: %s", agent.deviceID)
+    return nil,err
+  }
 
-	if oldDevice.AdminState == voltha.AdminState_ENABLED &&oldDevice.OperStatus != voltha.OperStatus_FAILED{
-		logger.Warnw(ctx, "device-already-enabled", log.Fields{"device-id": agent.deviceID})
-		agent.requestQueue.RequestComplete()
-		return nil, status.Error(codes.FailedPrecondition, fmt.Sprintf("cannot-enable-an-already-enabled-device: %s", oldDevice.Id))
-	}
-	
-	// First figure out which adapter will handle this device type.  We do it at this stage as allow devices to be
-	// pre-provisioned with the required adapter not registered.   At this stage, since we need to communicate
-	// with the adapter then we need to know the adapter that will handle this request
-	_, err = agent.adapterMgr.GetAdapterType(oldDevice.Type)
-	if err != nil {
-		agent.requestQueue.RequestComplete()
-		return nil,err
-	}
+  if oldDevice.AdminState == voltha.AdminState_ENABLED &&oldDevice.OperStatus != voltha.OperStatus_FAILED{
+    logger.Warnw(ctx, "device-already-enabled", log.Fields{"device-id": agent.deviceID})
+    agent.requestQueue.RequestComplete()
+    return nil, status.Error(codes.FailedPrecondition, fmt.Sprintf("cannot-enable-an-already-enabled-device: %s", oldDevice.Id))
+  }
 
-	newDevice := agent.cloneDeviceWithoutLock()
-	if newDevice.AdapterEndpoint == "" {
-                if newDevice.AdapterEndpoint, err = agent.adapterMgr.GetAdapterEndpoint(ctx, newDevice.Id, newDevice.Type); err != nil {
-                        agent.requestQueue.RequestComplete()
-                        return nil,err
-                }
-                agent.adapterEndpoint = newDevice.AdapterEndpoint
-            }
+  // First figure out which adapter will handle this device type.  We do it at this stage as allow devices to be
+  // pre-provisioned with the required adapter not registered.   At this stage, since we need to communicate
+  // with the adapter then we need to know the adapter that will handle this request
+  _, err = agent.adapterMgr.GetAdapterType(oldDevice.Type)
+  if err != nil {
+    agent.requestQueue.RequestComplete()
+     logger.Debugw(ctx, "GetAdapterType Error", log.Fields{"device-id": agent.deviceID})
 
-	// Update the Admin State and set the operational state to activating before sending the request to the Adapters
-	newDevice.AdminState = voltha.AdminState_ENABLED
-	newDevice.OperStatus = voltha.OperStatus_ACTIVATING
-	if err := agent.updateDeviceAndReleaseLock(ctx, newDevice); err != nil {
-		return nil, err
-	}
+    return nil,err
+  }
 
-	// Adopt the device if it was in pre-provision state.  In all other cases, try to re-enable it.
-	client, err := agent.adapterMgr.GetAdapterClient(ctx, agent.adapterEndpoint)
-            if err != nil {
-                logger.Errorw(ctx, "grpc-client-nil",
-                        log.Fields{
-                                "error":            err,
-                                "device-id":        agent.deviceID,
-                                "device-type":      agent.deviceType,
-                                "adapter-endpoint": newDevice.AdapterEndpoint,
-                        })
-                agent.requestQueue.RequestComplete()
-                return nil,err
-           }
-	//subctx, "cancel := context.WithTimeout(log.WithSpanFromContext(context.Background(), ctx), agent.defaultTimeout)
-	subctx, cancel := context.WithTimeout(coreutils.WithAllMetadataFromContext(ctx), agent.rpcTimeout)
-        	requestStatus.Code = common.OperationResp_OPERATION_IN_PROGRESS
+  newDevice := agent.cloneDeviceWithoutLock()
+  if newDevice.AdapterEndpoint == "" {
+    logger.Debugw(ctx, "AdapterEndPoint -''", log.Fields{"device-id": agent.deviceID})
 
-	_, err = client.CreateDeviceHandler(subctx, newDevice)
-	if err != nil {
-		cancel()
-		return nil,err
-	}
-	 if err = agent.updateDeviceAndReleaseLock(ctx, newDevice); err != nil {
-                return nil,err
-            }
-            currAdminState = newDevice.AdminState
+    if newDevice.AdapterEndpoint, err = agent.adapterMgr.GetAdapterEndpoint(ctx, newDevice.Id, newDevice.Type); err != nil {
+      agent.requestQueue.RequestComplete()
+      logger.Debugw(ctx, "GetAdapter Endpoint Error", log.Fields{"device-id": agent.deviceID})
 
-	// Wait for response
-//	logger.Warnw(ctx, "result", log.Fields{"ch": ch})
+      return nil,err
+    }
+    agent.adapterEndpoint = newDevice.AdapterEndpoint
+  }
 
-	return nil,nil
+  // Update the Admin State and set the operational state to activating before sending the request to the Adapters
+  newDevice.AdminState = voltha.AdminState_ENABLED
+  newDevice.OperStatus = voltha.OperStatus_ACTIVATING
+//  if err := agent.updateDeviceAndReleaseLock(ctx, newDevice); err != nil {
+//    logger.Debugw(ctx, "updateDeviceAndReleaseLock Error", log.Fields{"device-id": agent.deviceID})
+//
+//    return nil, err
+//  }
+
+  // Adopt the device if it was in pre-provision state.  In all other cases, try to re-enable it.
+  client, err := agent.adapterMgr.GetAdapterClient(ctx, agent.adapterEndpoint)
+  if err != nil {
+    logger.Errorw(ctx, "grpc-client-nil",
+    log.Fields{
+      "error":            err,
+      "device-id":        agent.deviceID,
+      "device-type":      agent.deviceType,
+      "adapter-endpoint": newDevice.AdapterEndpoint,
+    })
+    agent.requestQueue.RequestComplete()
+    return nil,err
+  }
+  //subctx, "cancel := context.WithTimeout(log.WithSpanFromContext(context.Background(), ctx), agent.defaultTimeout)
+  subctx, cancel := context.WithTimeout(coreutils.WithAllMetadataFromContext(ctx), agent.rpcTimeout)
+  requestStatus.Code = common.OperationResp_OPERATION_IN_PROGRESS
+
+//  _, err = client.CreateDeviceHandler(subctx, newDevice)
+//  if err != nil {
+//    cancel()
+//    logger.Debugw(ctx, "CreateDeviceHandler Error", log.Fields{"device-id": agent.deviceID})
+//
+//    return nil,err
+//  }
+  go func(){
+    defer cancel()
+    var err error
+    _, err = client.CreateDeviceHandler(subctx, newDevice)
+    if err == nil{
+      logger.Debugw(ctx, "createDeviceHander grpc connection success", log.Fields{"device-id": agent.deviceID})
+      agent.onSuccess(subctx, nil, nil, true)
+    }else{
+      logger.Debugw(ctx, "createDeviceHander grpc connection error ", log.Fields{"device-id":agent.deviceID})
+      agent.onFailure(subctx,   err, nil, nil, true)
+    }
+  }()
+  if err = agent.updateDeviceAndReleaseLock(ctx, newDevice); err != nil {
+     logger.Debugw(ctx, "updateDeviceAndReleaseLock Error", log.Fields{"device-id": agent.deviceID})
+
+    return nil,err
+  }
+  currAdminState = newDevice.AdminState
+
+  // Wait for response
+  //	logger.Warnw(ctx, "result", log.Fields{"ch": ch})
+  logger.Debugw(ctx, "createDeviceHandler Success", log.Fields{"device-id": agent.deviceID})
+
+  return new(empty.Empty),nil
 }
 
 func (agent *Agent) SetSliceBw(ctx context.Context, reqMessage *bossopenolt.BossRequest) (*bossopenolt.ExecResult, error) {
