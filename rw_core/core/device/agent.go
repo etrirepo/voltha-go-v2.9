@@ -3008,4 +3008,20 @@ func (agent *Agent) SendOmciData(ctx context.Context, reqMessage *bossopenolt.Bo
 
     return client.SendOmciData(ctx, reqMessage)
 }
+func (agent *Agent) ActivateOnu(ctx context.Context, onu *voltha.ActiveOnu) (*empty.Empty, error) {
+    logger.Debugw(ctx, "ActivateOnu", log.Fields{"device-id": onu.DeviceId})
+    client, err := agent.adapterMgr.GetAdapterClient(ctx, agent.adapterEndpoint)
+    if err != nil {
+                logger.Errorw(ctx, "SendOmciData-grpc-client-nil",
+                        log.Fields{
+                                "error":       err,
+                                "device-id":   agent.deviceID,
+                                "device-type": agent.deviceType,
+                        })
+                return nil, err
+        }
+
+
+    return client.SendActiveOnu(ctx, onu)
+}
 

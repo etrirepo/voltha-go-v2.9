@@ -2159,4 +2159,15 @@ func(boss *BossOpenoltManager) SendOmciData(ctx context.Context, reqMessage *bos
         //return response, nil
         return nil, status.Errorf(codes.NotFound, "%s", reqMessage.DeviceId)
 }
+func (dMgr *Manager) ActivateONU(ctx context.Context, onu *voltha.ActiveOnu) (*empty.Empty, error) {
+	log.EnrichSpan(ctx, log.Fields{"device-id": onu.DeviceId})
+
+	logger.Debugw(ctx, "ActivateOnu", log.Fields{"device-id": onu.DeviceId})
+	agent := dMgr.getDeviceAgent(ctx, onu.DeviceId)
+	if agent == nil {
+		return nil, status.Errorf(codes.NotFound, "%s", onu.DeviceId)
+	}
+	return agent.ActivateOnu(ctx, onu)
+}
+
 
