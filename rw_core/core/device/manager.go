@@ -2088,7 +2088,7 @@ func(boss *BossOpenoltManager) GetSliceBw(ctx context.Context, reqMessage *bosso
     return nil, status.Errorf(codes.NotFound, "%s", reqMessage.DeviceId)
 }
 
-func(boss *BossOpenoltManager) SetSlaV2(ctx context.Context, reqMessage *bossopenolt.BossRequest) (*bossopenolt.SlaV2Response, error){
+func(boss *BossOpenoltManager) SetSlaV2(ctx context.Context, reqMessage *bossopenolt.BossRequest) (*bossopenolt.RepeatedSlaV2Response, error){
     /*response :=&bossopenolt.SlaV2Response{
         DeviceId : reqMessage.DeviceId,
         VlanMode : 1,
@@ -2106,7 +2106,7 @@ func(boss *BossOpenoltManager) SetSlaV2(ctx context.Context, reqMessage *bossope
     return nil, status.Errorf(codes.NotFound, "%s", reqMessage.DeviceId)
 }
 
-func(boss *BossOpenoltManager) GetSlaV2(ctx context.Context, reqMessage *bossopenolt.BossRequest) (*bossopenolt.SlaV2Response, error){
+func(boss *BossOpenoltManager) GetSlaV2(ctx context.Context, reqMessage *bossopenolt.BossRequest) (*bossopenolt.RepeatedSlaV2Response, error){
     /*response :=&bossopenolt.SlaV2Response{
         DeviceId : reqMessage.DeviceId,
         VlanMode : 1,
@@ -2168,6 +2168,17 @@ func (dMgr *Manager) ActivateONU(ctx context.Context, onu *voltha.ActiveOnu) (*e
 		return nil, status.Errorf(codes.NotFound, "%s", onu.DeviceId)
 	}
 	return agent.ActivateOnu(ctx, onu)
+}
+
+func (dMgr *Manager) SendOmciDatav2(ctx context.Context, omci *voltha.OmciDatav2) (*empty.Empty, error) {
+	log.EnrichSpan(ctx, log.Fields{"device-id": omci.DeviceId})
+
+	logger.Debugw(ctx, "SendOmciDatav2", log.Fields{"device-id": omci.DeviceId})
+	agent := dMgr.getDeviceAgent(ctx, omci.DeviceId)
+	if agent == nil {
+		return nil, status.Errorf(codes.NotFound, "%s", omci.DeviceId)
+	}
+	return agent.SendOmciDatav2(ctx, omci)
 }
 
 

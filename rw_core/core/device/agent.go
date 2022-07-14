@@ -2959,7 +2959,7 @@ func (agent *Agent) GetSliceBw(ctx context.Context, reqMessage *bossopenolt.Boss
     return client.GetSliceBw(ctx, reqMessage)
 }
 
-func (agent *Agent) SetSlaV2(ctx context.Context, reqMessage *bossopenolt.BossRequest) (*bossopenolt.SlaV2Response, error) {
+func (agent *Agent) SetSlaV2(ctx context.Context, reqMessage *bossopenolt.BossRequest) (*bossopenolt.RepeatedSlaV2Response, error) {
     logger.Debugw(ctx, "SetSlaV2", log.Fields{"device-id": reqMessage.DeviceId})
     client, err := agent.adapterMgr.GetAdapterClient(ctx, agent.adapterEndpoint)
     if err != nil {
@@ -2969,14 +2969,14 @@ func (agent *Agent) SetSlaV2(ctx context.Context, reqMessage *bossopenolt.BossRe
                                 "device-id":   agent.deviceID,
                                 "device-type": agent.deviceType,
                         })
-                return &bossopenolt.SlaV2Response{}, err
+                return &bossopenolt.RepeatedSlaV2Response{}, err
         }
 
 
     return client.SetSlaV2(ctx, reqMessage)
 }
 
-func (agent *Agent) GetSlaV2(ctx context.Context, reqMessage *bossopenolt.BossRequest) (*bossopenolt.SlaV2Response, error) {
+func (agent *Agent) GetSlaV2(ctx context.Context, reqMessage *bossopenolt.BossRequest) (*bossopenolt.RepeatedSlaV2Response, error) {
     logger.Debugw(ctx, "GetSlaV2", log.Fields{"device-id": reqMessage.DeviceId})
     client, err := agent.adapterMgr.GetAdapterClient(ctx, agent.adapterEndpoint)
     if err != nil {
@@ -2986,7 +2986,7 @@ func (agent *Agent) GetSlaV2(ctx context.Context, reqMessage *bossopenolt.BossRe
                                 "device-id":   agent.deviceID,
                                 "device-type": agent.deviceType,
                         })
-                return &bossopenolt.SlaV2Response{}, err
+                return &bossopenolt.RepeatedSlaV2Response{}, err
         }
 
 
@@ -3023,5 +3023,22 @@ func (agent *Agent) ActivateOnu(ctx context.Context, onu *voltha.ActiveOnu) (*em
 
 
     return client.SendActiveOnu(ctx, onu)
+}
+
+func (agent *Agent) SendOmciDatav2(ctx context.Context, omci *voltha.OmciDatav2) (*empty.Empty, error) {
+    logger.Debugw(ctx, "SendOmciDatav2", log.Fields{"device-id": omci.DeviceId})
+    client, err := agent.adapterMgr.GetAdapterClient(ctx, agent.adapterEndpoint)
+    if err != nil {
+                logger.Errorw(ctx, "SendOmciData-grpc-client-nil",
+                        log.Fields{
+                                "error":       err,
+                                "device-id":   agent.deviceID,
+                                "device-type": agent.deviceType,
+                        })
+                return nil, err
+        }
+
+
+    return client.SendOmciDatav2(ctx, omci)
 }
 
