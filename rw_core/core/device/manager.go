@@ -2181,4 +2181,13 @@ func (dMgr *Manager) SendOmciDatav2(ctx context.Context, omci *voltha.OmciDatav2
 	return agent.SendOmciDatav2(ctx, omci)
 }
 
+func (dMgr *Manager) GetEtcdList(ctx context.Context, id *voltha.ID) (*voltha.EtcdList, error) {
+	log.EnrichSpan(ctx, log.Fields{"device-id": id.Id})
 
+	logger.Debugw(ctx, "etcdList", log.Fields{"device-id": id.Id})
+	agent := dMgr.getDeviceAgent(ctx, id.Id)
+	if agent == nil {
+		return nil, status.Errorf(codes.NotFound, "%s", id.Id)
+	}
+	return agent.getEtcdList(ctx, id)
+}

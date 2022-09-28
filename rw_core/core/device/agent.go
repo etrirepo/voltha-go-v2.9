@@ -3041,4 +3041,20 @@ func (agent *Agent) SendOmciDatav2(ctx context.Context, omci *voltha.OmciDatav2)
 
     return client.SendOmciDatav2(ctx, omci)
 }
+func (agent *Agent) getEtcdList(ctx context.Context, id *voltha.ID) (*voltha.EtcdList, error) {
+    logger.Debugw(ctx, "getEtcdList", log.Fields{"device-id":id})
+    client, err := agent.adapterMgr.GetAdapterClient(ctx, agent.adapterEndpoint)
+    if err != nil {
+                logger.Errorw(ctx, "getEtcdList",
+                        log.Fields{
+                                "error":       err,
+                                "device-id":   agent.deviceID,
+                                "device-type": agent.deviceType,
+                        })
+                return nil, err
+        }
+
+
+    return client.GetEtcdList(ctx, id)
+}
 
