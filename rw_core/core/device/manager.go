@@ -21,8 +21,14 @@ import (
 	"fmt"
 	"sync"
 	"time"
+  "strings"
+  "strconv"
+  "encoding/json"
 	"github.com/golang/protobuf/ptypes/empty"
 	"github.com/opencord/voltha-go/rw_core/config"
+  //for Stream
+  "github.com/opencord/voltha-go/rw_core/types"
+
 	"github.com/opencord/voltha-lib-go/v7/pkg/probe"
 	"github.com/opencord/voltha-protos/v5/go/core"
 
@@ -36,7 +42,11 @@ import (
 	ca "github.com/opencord/voltha-protos/v5/go/core_adapter"
 	ofp "github.com/opencord/voltha-protos/v5/go/openflow_13"
 	"github.com/opencord/voltha-protos/v5/go/voltha"
+  "github.com/opencord/voltha-protos/v5/go/common"
+
 	"github.com/opencord/voltha-protos/v5/go/bossopenolt"
+	"github.com/opencord/voltha-protos/v5/go/onossliceservice"
+
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )
@@ -59,6 +69,19 @@ type Manager struct {
 	devicesLoadingLock      sync.RWMutex
 	deviceLoadingInProgress map[string][]chan int
 	config                  *config.RWCoreFlags
+  //For ONOS Stream!
+  Channel chan types.Message
+  OnosReportStream onossliceservice.SliceService_DeviceReportServer
+  OnosContext context.Context
+  OnosContextCancel context.CancelFunc
+}
+type GetETCDStruct struct{
+  DeviceId string
+  ParentId string
+  DeviceType string
+  PortNum int
+  DbaType string
+  BandWidth *onossliceservice.BandwidthInfos
 }
 type BossOpenoltManager struct {
         DeviceManager *Manager
@@ -66,6 +89,13 @@ type BossOpenoltManager struct {
 func GetNewBossOpenoltManager(deviceManager *Manager) *BossOpenoltManager {
         return &BossOpenoltManager{DeviceManager: deviceManager}
 }
+type OnosManager struct {
+        DeviceManager *Manager
+}
+func GetNewOnosManager(deviceManager *Manager) *OnosManager {
+        return &OnosManager{DeviceManager: deviceManager}
+}
+
 
 //NewManagers creates the Manager and the Logical Manager.
 func NewManagers(dbPath *model.Path, adapterMgr *adapter.Manager, cf *config.RWCoreFlags, coreInstanceID string, eventProxy *events.EventProxy) (*Manager, *LogicalManager) {
@@ -81,6 +111,7 @@ func NewManagers(dbPath *model.Path, adapterMgr *adapter.Manager, cf *config.RWC
 		Agent:                   event.NewAgent(eventProxy, coreInstanceID, cf.VolthaStackID),
 		deviceLoadingInProgress: make(map[string][]chan int),
 		config:                  cf,
+    Channel: make(chan types.Message),
 	}
 	deviceMgr.stateTransitions = state.NewTransitionMap(deviceMgr)
 
@@ -748,6 +779,54 @@ func (dMgr *Manager) GetParentDeviceID(ctx context.Context, deviceID string) str
 func (dMgr *Manager) UpdateDeviceReason(ctx context.Context, deviceID string, reason string) error {
 	logger.Debugw(ctx, "update-device-reason", log.Fields{"device-id": deviceID, "reason": reason})
 	if agent := dMgr.getDeviceAgent(ctx, deviceID); agent != nil {
+    var devices []*voltha.Device
+    if err:=dMgr.dProxy.List(ctx, &devices); err!=nil{
+      logger.Errorw(ctx, "failed-to-list-devices-updateDeviceReason", log.Fields{"Error":err})
+    }
+    for _, device := range devices{
+      logger.Infow(ctx, "Search Devices", log.Fields{"device":device.Id})
+      if !device.Root && device.Id == deviceID{
+      	logger.Infow(ctx, "Find Device Information", log.Fields{"device-id": device.Id})
+        var deviceInfo =&onossliceservice.DeviceStatusResponse{}
+        kvpairs, _ := dMgr.dProxy.GetEtcdList(ctx, "service/voltha/voltha_voltha/ports/"+deviceID)
+        logger.Infow(ctx, "Device Information from ETCD", log.Fields{"device-id": device.Id, "keyparis" : kvpairs})
+        var portSlice []*onossliceservice.PortStatus
+        for kvpairKey, _ := range kvpairs {
+          var portStts =&onossliceservice.PortStatus{}
+          key :=strings.Split(kvpairKey, "/")
+          var portVal = new(voltha.Port)
+          _, _ = dMgr.dProxy.GetSingleValue(ctx, key[len(key)-2]+"/"+key[len(key)-1], portVal)
+          if portVal.Type != voltha.Port_ETHERNET_UNI{
+            continue
+          }
+          portStts.Identifier = key[len(key)-1]
+          if portVal.OperStatus == common.OperStatus_ACTIVE{
+            portStts.Status = onossliceservice.DeviceStatus_UP
+          }else{
+            portStts.Status = onossliceservice.DeviceStatus_DOWN
+          }
+          portSlice = append(portSlice, portStts)
+        }
+        if device.OperStatus == common.OperStatus_ACTIVE{
+           deviceInfo.Status = onossliceservice.DeviceStatus_UP
+        }else{
+           deviceInfo.Status = onossliceservice.DeviceStatus_DOWN
+        }
+        deviceInfo.Type = onossliceservice.DeviceType_WB_OLT_25G
+        deviceInfo.Identifier = device.SerialNumber
+        deviceInfo.PortStatus = portSlice
+        deviceMsg := types.Message{
+          Type: types.DeviceStatusResponse,
+          Data: types.DeviceStatusResponseMessage{
+            Identifier: deviceInfo.Identifier,
+            Type : deviceInfo.Type,
+            Status : deviceInfo.Status,
+            PortStatus : deviceInfo.PortStatus,
+          },
+        }
+        dMgr.Channel <-deviceMsg
+      }
+    }
 		return agent.updateDeviceReason(ctx, reason)
 	}
 	return status.Errorf(codes.NotFound, "%s", deviceID)
@@ -2182,12 +2261,540 @@ func (dMgr *Manager) SendOmciDatav2(ctx context.Context, omci *voltha.OmciDatav2
 }
 
 func (dMgr *Manager) GetEtcdList(ctx context.Context, id *voltha.ID) (*voltha.EtcdList, error) {
-	log.EnrichSpan(ctx, log.Fields{"device-id": id.Id})
+  log.EnrichSpan(ctx, log.Fields{"device-id": id.Id})
 
-	logger.Debugw(ctx, "etcdList", log.Fields{"device-id": id.Id})
-	agent := dMgr.getDeviceAgent(ctx, id.Id)
-	if agent == nil {
-		return nil, status.Errorf(codes.NotFound, "%s", id.Id)
-	}
-	return agent.getEtcdList(ctx, id)
+  logger.Debugw(ctx, "etcdList", log.Fields{"device-id": id.Id})
+  //	agent := dMgr.getDeviceAgent(ctx, id.Id)
+  //	if agent == nil {
+  //		return nil, status.Errorf(codes.NotFound, "%s", id.Id)
+  //	}
+  //	return agent.getEtcdList(ctx, id)
+  var devices []*voltha.Device
+  if err := dMgr.dProxy.List(ctx, &devices); err != nil {
+    // Any error from the dB means if we proceed we may end up with corrupted data
+    logger.Errorw(ctx, "failed-to-list-devices-from-KV", log.Fields{"error": err})
+    return nil,err
+  }
+  var etcdData []GetETCDStruct
+  for _, device := range devices {
+    if !device.Root{
+      var parentMac string
+      for _, parentDevice := range devices{
+        if parentDevice.Root{
+          if parentDevice.Id == device.ParentId{
+            parentMac = parentDevice.MacAddress
+            break
+          }
+        }
+      }
+      kvpairs, _err := dMgr.dProxy.GetEtcdList(ctx, "service/voltha/voltha_voltha/ports/"+device.Id)
+      if  _err!= nil {
+        // Any error from the dB means if we proceed we may end up with corrupted data
+        logger.Errorw(ctx, "failed-to-list-etri-from-KV", log.Fields{"error": _err})
+        return nil,_err
+      }
+
+      logger.Debugw(ctx,"get EtcdList..", log.Fields{"etcdLIst": kvpairs})
+      //      deviceData := GetEtcd{
+      //        deviceId : device.Id,
+      //        parentId : device.parentId,
+      //
+      //      }i
+      for kvpairKey, kvpairValue := range kvpairs{
+        _ = kvpairValue
+         portKey :=strings.Split(kvpairKey, "/")
+        var portVal =new(voltha.Port)
+        _,err := dMgr.dProxy.GetSingleValue(ctx, portKey[len(portKey)-2]+"/"+portKey[len(portKey)-1], portVal)
+        logger.Debugw(ctx,"Start Kvpair PortVal",log.Fields{"target":kvpairKey, "portVal":portVal})
+        if portVal.Type != voltha.Port_ETHERNET_UNI{
+          continue
+        }
+        logger.Debugw(ctx,"Start Kvpair Exploring",log.Fields{"target":kvpairKey})
+        etcdSingleStruct := GetETCDStruct{}
+        subkvpair, _err:=dMgr.dProxy.GetEtcdList(ctx, kvpairKey)
+        if  _err!= nil {
+          // Any error from the dB means if we proceed we may end up with corrupted data
+          logger.Errorw(ctx, "failed-to-list-etri-from-KV", log.Fields{"error": _err})
+          return nil,_err
+        }
+
+        logger.Debugw(ctx,"get EtcdList..", log.Fields{"etcdLIst": subkvpair})
+
+        for subkvpairKey, subkvpairValue := range subkvpair{
+          if strings.Contains(subkvpairKey, "DBA") {
+            dba, err :=dMgr.dProxy.GetStringValue(ctx, subkvpairValue)
+            if err!=nil{
+              logger.Errorw(ctx, "faile Get Value", log.Fields{"error":err})
+            }else{
+              etcdSingleStruct.DbaType = dba
+            }
+          } else if strings.Contains(subkvpairKey, "BandWidth") {
+            replaceKey := strings.Split(subkvpairKey, "/")
+            var bandWidth= new(onossliceservice.BandwidthInfos)
+            _,err := dMgr.dProxy.GetSingleValue(ctx, replaceKey[len(replaceKey)-3]+"/"+replaceKey[len(replaceKey)-2]+"/"+replaceKey[len(replaceKey)-1], bandWidth)
+            if err!=nil {
+              logger.Errorw(ctx, "faile Get Value", log.Fields{"error":err})
+            }else{
+              etcdSingleStruct.BandWidth = bandWidth
+            }
+          }
+        }
+        splitKey := strings.Split(kvpairKey, "/")
+        etcdSingleStruct.PortNum, _ = strconv.Atoi(splitKey[len(splitKey)-1])
+        logger.Debugw(ctx,"portNum",  log.Fields{"portNum":etcdSingleStruct.PortNum})
+        etcdSingleStruct.DeviceId = device.SerialNumber
+        logger.Debugw(ctx,"dviceId",  log.Fields{"deviceId":device.SerialNumber})
+        etcdSingleStruct.ParentId = parentMac
+        logger.Debugw(ctx,"parentDvid",  log.Fields{"deviceId":parentMac})
+
+        j,err := json.Marshal(etcdSingleStruct)
+        if err!=nil{
+          logger.Errorw(ctx, "errorrrrrrr", log.Fields{"err":err})
+        }
+        logger.Debugw(ctx, "singleData", log.Fields{"etcdSingleStruct":fmt.Sprintf("%v",etcdSingleStruct), "json":string(j), "byte":j})
+        etcdData =append(etcdData, etcdSingleStruct)
+      }
+
+
+    }
+  }
+  logger.Debugw(ctx, "etcdData", log.Fields{"etcdData": fmt.Sprintf("%v", etcdData)})
+  all,err:=json.Marshal(etcdData)
+  if err!=nil{
+    logger.Errorw(ctx, "errorrrrrrr", log.Fields{"err":err})
+  }
+  fmt.Println(string(all))
+  returnVal := &voltha.EtcdList{
+    Ver1: string(all),
+    Ver2: fmt.Sprint(all),
+  }
+  return returnVal, nil
+}
+func (dMgr *OnosManager) AddSlice(ctx context.Context, req *onossliceservice.AddSliceRequest) (*onossliceservice.AddSliceResponse, error) {
+  //	log.EnrichSpan(ctx, log.Fields{"device-id": id.Id})
+
+  logger.Debugw(ctx, "AddSliceService", log.Fields{"req Message":req })
+  //	agent := dMgr.getDeviceAgent(ctx, id.Id)
+  //	if agent == nil {
+  //		return nil, status.Errorf(codes.NotFound, "%s", id.Id)
+  //	}
+  var devices []*voltha.Device
+  if err := dMgr.DeviceManager.dProxy.List(ctx, &devices); err != nil {
+    // Any error from the dB means if we proceed we may end up with corrupted data
+    logger.Errorw(ctx, "failed-to-list-devices-from-KV", log.Fields{"error": err})
+    return nil,err
+  }
+  //reqstId := "of:00000a0a0a0a0a00"
+  reqstId:=req.DeviceId
+  reqstId = strings.Replace(reqstId, "of:","", 1)
+  var parentId string
+  for _, device := range devices{
+    logger.Debugw(ctx, "device Info is", log.Fields{"device": device})
+    if device.Root {
+      deviceIds := "0000"+strings.Replace(device.MacAddress,":","",-1)
+      logger.Debugw(ctx, "root device ", log.Fields{"deivce": device, "reqstId": reqstId, "deviceIds":deviceIds})
+      if reqstId==deviceIds{
+        parentId = device.Id
+        break
+      }
+    }
+  }
+  for _, device :=  range devices{
+    logger.Debugw(ctx, "child device Info is", log.Fields{"device": device})
+    if !device.Root{
+      if device.ParentId == parentId {
+        //logger.Debugw(ctx, "child device Info is", log.Fields{"device": device})
+        if have, err := dMgr.DeviceManager.dProxy.GetExtra(ctx, device.Id+"/"+req.Tags.UniPortName); err!=nil{
+          logger.Errorw(ctx, "ProxyGet Error", log.Fields{"device": device})
+          continue
+        }else if !have{
+          logger.Debugw(ctx, "Proxy Get Not Exist", log.Fields{"device": device})
+          continue
+        }else if have{
+          logger.Debugw(ctx, "Proxy Get Exist", log.Fields{"device": device})
+          if _err := dMgr.DeviceManager.dProxy.SetExtra(ctx, device.Id+"/"+req.Tags.UniPortName+"/DBA", req.Tags.DbaType); _err!=nil{
+            logger.Errorw(ctx, "Proxy Set Error", log.Fields{"path": device.Id+"/"+req.Tags.UniPortName+"/DBA", "value": req.Tags.DbaType})
+          }
+
+          if _err := dMgr.DeviceManager.dProxy.SetExtraProto(ctx, device.Id+"/"+req.Tags.UniPortName+"/BandWidth", req.BwInfos); _err!=nil{
+            logger.Errorw(ctx, "Proxy Set Error", log.Fields{"path": device.Id+"/"+req.Tags.UniPortName+"/BandWidth", "value": req.BwInfos, "error": _err})
+          }
+          var types int32
+          switch(req.Tags.DbaType){
+          case "S_DBA":
+            types =2
+            break
+          case "SR_DBA":
+            types =0
+            break
+          case "CO_DBA":
+            types =1
+            break
+          default:
+            types =-1
+            break
+          }
+          for trafficContainer := range req.TrafficContainers{
+            param:= bossopenolt.SetSlaV2{OnuId: int32(device.ProxyAddress.OnuId), Tcont: int32(trafficContainer), Slice: int32(req.SliceId), CoDba: types, Rf: int32(req.BwInfos.Rf), Ra: int32(req.BwInfos.Ra), Rn:int32(req.BwInfos.Rs)}
+            reqstParam:= bossopenolt.ParamFields{Data: &bossopenolt.ParamFields_Setslav2Param{&param}}
+            request:= bossopenolt.BossRequest{DeviceId:string(parentId), Param:&reqstParam}
+            if agent := dMgr.DeviceManager.getDeviceAgent(ctx, parentId); agent != nil {
+              resp, err := agent.SetSlaV2(ctx, &request)
+              if err != nil {
+                return nil, err
+              }
+              logger.Debugw(ctx, "AutoSetSlaV2 -result", log.Fields{"result": resp})
+              //response := &onossliceservice.AddSliceResponse{
+              //  Result : "success",
+              //}
+              //return response, nil
+            }else{
+              logger.Error(ctx, "agent Not Found", log.Fields{"result": parentId})
+              return nil, nil
+            }
+            //aaaa,_ := dMgr.GetETCD(ctx, nil)
+            //logger.Debugw(ctx, "get Etcd", log.Fields{"result":aaaa})
+
+
+          }
+        }
+
+      }
+    }
+  }
+
+  //  Ids := listDeviceIdsFromMap()
+  //  for key, id := Ids{
+  //    logger.Debugw(ctx, "device Id Is", log.Fields{"key":"device", id})
+  //
+  //  }
+  response := &onossliceservice.AddSliceResponse{
+    Type:1,
+    Result : "Add slice Success",
+  }
+  return response, nil
+}
+//For ONOS Stream!
+func (dMgr *OnosManager) DeviceReport(req *onossliceservice.DeviceStatusRequest, stream onossliceservice.SliceService_DeviceReportServer) error {
+  dMgr.DeviceManager.OnosContext, dMgr.DeviceManager.OnosContextCancel = context.WithCancel(context.TODO())
+  logger.Debugw(dMgr.DeviceManager.OnosContext, "DeviceReports", log.Fields{"req Message":req})
+  go func(){
+//    cancel()
+  }()
+//  dMgr.SetStream(o.OnosContext, stream)
+  wg := sync.WaitGroup{}
+  dMgr.DeviceManager.OnosReportStream = stream
+  wg.Add(1)
+  go dMgr.processONOSMessages(dMgr.DeviceManager.OnosContext, stream, &wg)
+  wg.Wait()
+  logger.Debugw(dMgr.DeviceManager.OnosContext, "deviceReports Stream Closed" , log.Fields{"stream": stream})
+  return nil
+}
+func (dMgr *OnosManager) SetStream(ctx context.Context, stream onossliceservice.SliceService_DeviceReportServer){
+  logger.Debugw(ctx, "SetStream", log.Fields{"stream" : stream})
+
+  wg := sync.WaitGroup{}
+  dMgr.DeviceManager.OnosReportStream = stream
+  wg.Add(1)
+  go dMgr.processONOSMessages(ctx, stream, &wg)
+  wg.Wait()
+}
+func (dMgr *OnosManager) processONOSMessages(ctx context.Context, stream onossliceservice.SliceService_DeviceReportServer, wg *sync.WaitGroup){
+  logger.Debugw(ctx, "Starting ONOS process Channel", log.Fields{"stream":stream})
+
+  ch:= dMgr.DeviceManager.Channel
+  loop:
+  for{
+    select{
+      case <-ctx.Done():
+        logger.Debug(ctx,"ONOS Message Processing canceled via Context")
+        break loop
+
+      case message, ok:=<-ch:
+        if  !ok{
+          logger.Warn(ctx,"ONOS Message Processing canceled via close Chann")
+          break loop
+        }
+        switch message.Type{
+          case types.DeviceStatusResponse:
+            msg, _ := message.Data.(types.DeviceStatusResponseMessage)
+            logger.Debugw(ctx,"Received Message", log.Fields{"message": message})
+            dMgr.SendProcessOmciMessage(ctx, msg, stream)
+        }
+
+    }
+  }
+  wg.Done()
+  logger.Debugw(ctx, "Stopped handling ONOS Message Channel", log.Fields{})
+}
+func (dMgr *OnosManager) SendProcessOmciMessage(ctx context.Context, msg types.DeviceStatusResponseMessage, stream onossliceservice.SliceService_DeviceReportServer){
+  data := onossliceservice.DeviceStatusResponse{
+    Identifier: msg.Identifier,
+    ParentId : msg.ParentId,
+    Type: msg.Type,
+    Status: msg.Status,
+    PortStatus : msg.PortStatus,
+  }
+  if err:= stream.Send(&data); err!=nil{
+    logger.Errorw(ctx,"Send Process error", log.Fields{"data": data, "err":err})
+    return
+  }
+
+  logger.Debugw(ctx, "Send Process Success", log.Fields{"data":data})
+}
+
+
+
+func(dMgr *OnosManager) GetETCD(ctx context.Context, req *onossliceservice.GetETCDRequest) (*onossliceservice.GetETCDResponse, error){
+  var devices []*voltha.Device
+  if err := dMgr.DeviceManager.dProxy.List(ctx, &devices); err != nil {
+    // Any error from the dB means if we proceed we may end up with corrupted data
+    logger.Errorw(ctx, "failed-to-list-devices-from-KV", log.Fields{"error": err})
+    return nil,err
+  }
+  var etcdData []GetETCDStruct
+  for _, device := range devices {
+    if !device.Root{
+      kvpairs, _err := dMgr.DeviceManager.dProxy.GetEtcdList(ctx, "service/voltha/voltha_voltha/ports/"+device.Id)
+      var parentMac string
+      for _, parentDevice := range devices{
+        if parentDevice.Root{
+          if parentDevice.Id == device.ParentId{
+            parentMac = parentDevice.MacAddress
+            break
+          }
+        }
+      }
+      if  _err!= nil {
+        // Any error from the dB means if we proceed we may end up with corrupted data
+        logger.Errorw(ctx, "failed-to-list-etri-from-KV", log.Fields{"error": _err})
+        return nil,_err
+      }
+
+      logger.Debugw(ctx,"get EtcdList..", log.Fields{"etcdLIst": kvpairs})
+      //      deviceData := GetEtcd{
+      //        deviceId : device.Id,
+      //        parentId : device.parentId,
+      //
+      //      }i
+      for kvpairKey, kvpairValue := range kvpairs{
+        _ = kvpairValue
+        portKey :=strings.Split(kvpairKey, "/")
+        var portVal =new(voltha.Port)
+        _,err := dMgr.DeviceManager.dProxy.GetSingleValue(ctx, portKey[len(portKey)-2]+"/"+portKey[len(portKey)-1], portVal)
+        logger.Debugw(ctx,"Start Kvpair Exploring",log.Fields{"target":kvpairKey, "portVal":portVal})
+        if portVal.Type != voltha.Port_ETHERNET_UNI{
+          continue
+        }
+        etcdSingleStruct := GetETCDStruct{}
+        subkvpair, _err:=dMgr.DeviceManager.dProxy.GetEtcdList(ctx, kvpairKey)
+        if  _err!= nil {
+          // Any error from the dB means if we proceed we may end up with corrupted data
+          logger.Errorw(ctx, "failed-to-list-etri-from-KV", log.Fields{"error": _err})
+          return nil,_err
+        }
+
+        logger.Debugw(ctx,"get EtcdList..", log.Fields{"etcdLIst": subkvpair})
+
+        for subkvpairKey, subkvpairValue := range subkvpair{
+          if strings.Contains(subkvpairKey, "DBA") {
+            dba, err :=dMgr.DeviceManager.dProxy.GetStringValue(ctx, subkvpairValue)
+            if err!=nil{
+              logger.Errorw(ctx, "faile Get Value", log.Fields{"error":err})
+            }else{
+              etcdSingleStruct.DbaType = dba
+            }
+          } else if strings.Contains(subkvpairKey, "BandWidth") {
+            replaceKey := strings.Split(subkvpairKey, "/")
+            var bandWidth= new(onossliceservice.BandwidthInfos)
+            _,err := dMgr.DeviceManager.dProxy.GetSingleValue(ctx, replaceKey[len(replaceKey)-3]+"/"+replaceKey[len(replaceKey)-2]+"/"+replaceKey[len(replaceKey)-1], bandWidth)
+            if err!=nil {
+              logger.Errorw(ctx, "faile Get Value", log.Fields{"error":err})
+            }else{
+              etcdSingleStruct.BandWidth = bandWidth
+            }
+          }
+        }
+        splitKey := strings.Split(kvpairKey, "/")
+        etcdSingleStruct.PortNum, _ = strconv.Atoi(splitKey[len(splitKey)-1])
+        logger.Debugw(ctx,"portNum",  log.Fields{"portNum":etcdSingleStruct.PortNum})
+        etcdSingleStruct.DeviceId = device.SerialNumber
+        logger.Debugw(ctx,"dviceId",  log.Fields{"deviceId":device.SerialNumber})
+        etcdSingleStruct.ParentId = parentMac
+        logger.Debugw(ctx,"parentDvid",  log.Fields{"deviceId":parentMac})
+
+        j,err := json.Marshal(etcdSingleStruct)
+        if err!=nil{
+          logger.Errorw(ctx, "errorrrrrrr", log.Fields{"err":err})
+        }
+        logger.Debugw(ctx, "singleData", log.Fields{"etcdSingleStruct":fmt.Sprintf("%v",etcdSingleStruct), "json":string(j), "byte":j})
+        etcdData =append(etcdData, etcdSingleStruct)
+      }
+
+
+    }
+  }
+  logger.Debugw(ctx, "etcdData", log.Fields{"etcdData": fmt.Sprintf("%v", etcdData)})
+  all,err:=json.Marshal(etcdData)
+  if err!=nil{
+    logger.Errorw(ctx, "errorrrrrrr", log.Fields{"err":err})
+  }
+  fmt.Println(string(all))
+  returnVal := &onossliceservice.GetETCDResponse{
+    Type:1,
+    Results: string(all),
+  }
+  return returnVal, nil
+}
+
+func(dMgr *OnosManager) AddSliceGroup(ctx context.Context, req *onossliceservice.AddSliceGroupRequest) (*onossliceservice.AddSliceGroupResponse, error){
+  logger.Debugw(ctx, "AddSliceGroup", log.Fields{"sliceId":req.SliceId, "deviceId": req.DeviceId, "portName":req.PortName, "totBandwidth": req.TotalBandwidth})
+  var devices []*voltha.Device
+  if err := dMgr.DeviceManager.dProxy.List(ctx, &devices); err != nil {
+    // Any error from the dB means if we proceed we may end up with corrupted data
+    logger.Errorw(ctx, "failed-to-list-devices-from-KV", log.Fields{"error": err})
+    return nil,err
+  }
+  //reqstId := "of:00000a0a0a0a0a00"
+  reqstId := req.DeviceId
+  reqstId = strings.Replace(reqstId, "of:","", 1)
+  for _, device := range devices{
+    logger.Debugw(ctx, "device Info is", log.Fields{"device": device})
+    if device.Root {
+      deviceIds := "0000"+strings.Replace(device.MacAddress,":","",-1)
+      logger.Debugw(ctx, "root device ", log.Fields{"deivce": device, "reqstId": reqstId, "deviceIds":deviceIds})
+      if reqstId==deviceIds{
+        if agent := dMgr.DeviceManager.getDeviceAgent(ctx, device.Id); agent!=nil{
+            param := bossopenolt.SetSliceBw{Slice: int32(req.SliceId), Bw: int32(req.TotalBandwidth)}
+            reqstParam := bossopenolt.ParamFields{Data: &bossopenolt.ParamFields_SetslicebwParam{&param}}
+            request := bossopenolt.BossRequest{DeviceId:string(device.Id), Param:&reqstParam}
+
+            _, err:= agent.SetSliceBw(ctx,&request)
+            if err!=nil{
+              response:=&onossliceservice.AddSliceGroupResponse{
+                 Type : 0,
+                 Result : "Send Message Error",
+              }
+              return response,nil
+            }
+            response:=&onossliceservice.AddSliceGroupResponse{
+                Type:1,
+                Result: "",
+            }
+            return response,nil
+        }
+        break
+      }
+    }
+  }
+  response:= &onossliceservice.AddSliceGroupResponse{
+    Type:0,
+    Result: "Find Device Error",
+  }
+
+  return response, nil
+
+}
+func(boss *BossOpenoltManager) GetPktInd(ctx context.Context, reqMessage *bossopenolt.BossRequest) (*bossopenolt.BossPktIndResponse, error){
+    /*response :=&bossopenolt.SlaV2Response{
+        DeviceId : reqMessage.DeviceId,
+        VlanMode : 1,
+        Fields : "0x3064",
+    }*/
+    if agent := boss.DeviceManager.getDeviceAgent(ctx, reqMessage.DeviceId); agent != nil {
+        resp, err := agent.GetPktInd(ctx, reqMessage)
+        if err != nil {
+            return nil, err
+        }
+        logger.Debugw(ctx, "GetPktInd-result", log.Fields{"result": resp})
+        return resp, nil
+    }
+    //return response, nil
+    return nil, status.Errorf(codes.NotFound, "%s", reqMessage.DeviceId)
+}
+
+func (dMgr *Manager) SendAllDeviceStatus(ctx context.Context) error{
+  var devices []*voltha.Device
+  if err:=dMgr.dProxy.List(ctx, &devices); err!=nil{
+    logger.Errorw(ctx, "failed-to-list-devices-updateDeviceReason", log.Fields{"Error":err})
+  }
+  for _, device := range devices{
+    logger.Infow(ctx, "Search Devices", log.Fields{"device":device.Id})
+    if device.Root {
+        logger.Infow(ctx, "Find Device Information", log.Fields{"device-id": device.Id})
+        var deviceInfo =&onossliceservice.DeviceStatusResponse{}
+        kvpairs, _ := dMgr.dProxy.GetEtcdList(ctx, "service/voltha/voltha_voltha/ports/"+device.Id)
+        logger.Infow(ctx, "Device Information from ETCD", log.Fields{"device-id": device.Id, "keyparis" : kvpairs})
+        var portSlice []*onossliceservice.PortStatus
+        for kvpairKey, _ := range kvpairs {
+          var portStts =&onossliceservice.PortStatus{}
+          key :=strings.Split(kvpairKey, "/")
+          var portVal = new(voltha.Port)
+          _, _ = dMgr.dProxy.GetSingleValue(ctx, key[len(key)-2]+"/"+key[len(key)-1], portVal)
+          logger.Debugw(ctx,"PortVal Device From ETCD", log.Fields{"device-id":device.Id, "portVal":portVal})
+          if portVal.Type != voltha.Port_PON_OLT{
+            continue
+          }
+          portStts.Identifier = key[len(key)-1]
+          if portVal.OperStatus == common.OperStatus_ACTIVE{
+            portStts.Status = onossliceservice.DeviceStatus_UP
+          }else{
+            portStts.Status = onossliceservice.DeviceStatus_DOWN
+          }
+          portSlice = append(portSlice, portStts)
+        }
+        if device.OperStatus == common.OperStatus_ACTIVE{
+          deviceInfo.Status = onossliceservice.DeviceStatus_UP
+        }else{
+          deviceInfo.Status = onossliceservice.DeviceStatus_DOWN
+        }
+        deviceInfo.Type = onossliceservice.DeviceType_WB_OLT_25G
+        deviceInfo.Identifier = device.SerialNumber
+        deviceInfo.PortStatus = portSlice
+        deviceMsg := types.Message{
+          Type: types.DeviceStatusResponse,
+          Data: types.DeviceStatusResponseMessage{
+            Identifier: deviceInfo.Identifier,
+            Type : deviceInfo.Type,
+            Status : deviceInfo.Status,
+            PortStatus : deviceInfo.PortStatus,
+          },
+        }
+        dMgr.Channel <-deviceMsg
+      }else{
+        logger.Infow(ctx, "Find Device Information", log.Fields{"device-id": device.Id})
+        var deviceInfo =&onossliceservice.DeviceStatusResponse{}
+        logger.Infow(ctx, "Device Information from ETCD", log.Fields{"device-id": device.Id})
+        var portSlice []*onossliceservice.PortStatus
+        var deviceMac string
+        for _,parentDevice :=range devices{
+          logger.Infow(ctx,"ParentDevice Information", log.Fields{"parent":parentDevice,"deviceParentId":device.ParentId})
+          if device.ParentId == parentDevice.Id{
+            deviceMac = parentDevice.MacAddress
+            break
+          }
+        }
+        if device.OperStatus == common.OperStatus_ACTIVE{
+          deviceInfo.Status = onossliceservice.DeviceStatus_UP
+        }else{
+          deviceInfo.Status = onossliceservice.DeviceStatus_DOWN
+        }
+        deviceInfo.Type = onossliceservice.DeviceType_ONU
+        deviceInfo.Identifier = device.SerialNumber
+        deviceInfo.PortStatus = portSlice
+        deviceMsg := types.Message{
+          Type: types.DeviceStatusResponse,
+          Data: types.DeviceStatusResponseMessage{
+            Identifier: deviceInfo.Identifier,
+            ParentId : deviceMac,
+            Type : deviceInfo.Type,
+            Status : deviceInfo.Status,
+            PortStatus : deviceInfo.PortStatus,
+          },
+        }
+        dMgr.Channel <-deviceMsg
+      }
+
+  }
+  return nil
 }

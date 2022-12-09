@@ -3057,4 +3057,21 @@ func (agent *Agent) getEtcdList(ctx context.Context, id *voltha.ID) (*voltha.Etc
 
     return client.GetEtcdList(ctx, id)
 }
+func (agent *Agent) GetPktInd(ctx context.Context, reqMessage *bossopenolt.BossRequest) (*bossopenolt.BossPktIndResponse, error) {
+    logger.Debugw(ctx, "GetPktInd", log.Fields{"device-id": reqMessage.DeviceId})
+    client, err := agent.adapterMgr.GetAdapterClient(ctx, agent.adapterEndpoint)
+    if err != nil {
+                logger.Errorw(ctx, "GetPkt-grpc-client-nil",
+                        log.Fields{
+                                "error":       err,
+                                "device-id":   agent.deviceID,
+                                "device-type": agent.deviceType,
+                        })
+                return &bossopenolt.BossPktIndResponse{}, err
+        }
+
+
+    return client.GetPktInd(ctx, reqMessage)
+}
+
 

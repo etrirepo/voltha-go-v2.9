@@ -35,6 +35,8 @@ import (
 	"github.com/opencord/voltha-protos/v5/go/extension"
 	"github.com/opencord/voltha-protos/v5/go/voltha"
 	"github.com/opencord/voltha-protos/v5/go/bossopenolt"
+  "github.com/opencord/voltha-protos/v5/go/onossliceservice"
+
 	"google.golang.org/grpc"
 )
 
@@ -176,6 +178,7 @@ func (core *Core) Start(ctx context.Context, id string, cf *config.RWCoreFlags) 
 	//Register the 'Extension' service on this gRPC server
 	addGRPCExtensionService(ctx, grpcNBIServer, device.GetNewExtensionManager(deviceMgr))
 	addGRPCBossOpenoltService(ctx, grpcNBIServer, device.GetNewBossOpenoltManager(deviceMgr))
+	addGRPCOnosService(ctx, grpcNBIServer, device.GetNewOnosManager(deviceMgr))
 
 	go startGrpcNbiService(ctx, grpcNBIServer, grpcNBIService, api.NewAPIHandler(deviceMgr, logicalDeviceMgr, adapterMgr))
 	defer grpcNBIServer.Stop()
@@ -227,6 +230,14 @@ func addGRPCBossOpenoltService(ctx context.Context, server *grpcserver.GrpcServe
 
         server.AddService(func(server *grpc.Server) {
                 bossopenolt.RegisterBossOpenoltServer(server, handler)
+        })
+}
+
+func addGRPCOnosService(ctx context.Context, server *grpcserver.GrpcServer, handler onossliceservice.SliceServiceServer) {
+        logger.Info(ctx, "onos-grpc-server-created")
+
+        server.AddService(func(server *grpc.Server) {
+                onossliceservice.RegisterSliceServiceServer(server, handler)
         })
 }
 

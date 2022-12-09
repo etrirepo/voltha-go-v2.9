@@ -22,9 +22,11 @@ import (
 	"fmt"
 	"reflect"
 	"strings"
-
+  "encoding/json"
 	"github.com/gogo/protobuf/proto"
 	"github.com/opencord/voltha-lib-go/v7/pkg/db"
+  "github.com/opencord/voltha-lib-go/v7/pkg/db/kvstore"
+
 	"github.com/opencord/voltha-lib-go/v7/pkg/log"
 )
 
@@ -136,6 +138,27 @@ func (p *Proxy) Get(ctx context.Context, id string, target proto.Message) (bool,
 	return true, nil
 }
 
+func (p *Proxy) GetExtra(ctx context.Context, id string ) (bool, error) {
+	completePath := "ports/" + id
+
+	logger.Debugw(ctx, "proxy-get", log.Fields{
+		"path": completePath,
+	})
+
+	blob, err := p.kvStore.Get(ctx, completePath)
+	if err != nil {
+		return false, fmt.Errorf("failed to retrieve %s from kvstore: %s", completePath, err)
+	} else if blob == nil {
+		return false, nil // this blob does not exist
+	}
+
+	logger.Debugw(ctx, "parsing-data-blobs", log.Fields{
+		"path": completePath,
+	})
+
+	return true, nil
+}
+
 // Set will add new or update existing entry at the proxy's path location
 func (p *Proxy) Set(ctx context.Context, id string, data proto.Message) error {
 	completePath := p.path + id
@@ -154,7 +177,65 @@ func (p *Proxy) Set(ctx context.Context, id string, data proto.Message) error {
 	}
 	return nil
 }
+// SetDba will add Dba Type and BW from ETRI's ONOS
+func (p *Proxy) SetExtra(ctx context.Context, id string, value interface{}) error{
+  completePath := "ports/"+id
+  logger.Debugw(ctx, "Extra proxy-add", log.Fields{
+		"path": completePath,
+	})
+//  blob, err := proto.Marshal(value)
+//	if err != nil {
+//		return fmt.Errorf("unable to save to kvStore, error marshalling: %s", err)
+//	}
+//
+	if err := p.kvStore.Put(ctx, completePath, value); err != nil {
+		return fmt.Errorf("unable to write to kvStore: %s", err)
+	}
+	return nil
 
+
+}
+func (p *Proxy) SetExtraProto(ctx context.Context, id string, value proto.Message) error{
+  completePath := "ports/"+id
+  logger.Debugw(ctx, "Extra proxy-add", log.Fields{
+		"path": completePath,
+	})
+  blob, err := proto.Marshal(value)
+	if err != nil {
+		return fmt.Errorf("unable to save to kvStore, error marshalling: %s", err)
+	}
+
+	if err := p.kvStore.Put(ctx, completePath, blob); err != nil {
+		return fmt.Errorf("unable to write to kvStore: %s", err)
+	}
+	return nil
+
+
+}
+func (p *Proxy) GetEtcdList(ctx context.Context, key string)(map[string]*kvstore.KVPair, error){
+  span, ctx:= log.CreateChildSpan(ctx, "etcd-list")
+  defer span.Finish()
+  logger.Debugw(ctx, "getting-key", log.Fields{"key": key})
+  pair, err := p.kvStore.Client.List(ctx, key)
+
+  return pair, err
+}
+func (p *Proxy) GetStringValue(ctx context.Context, kvpair *kvstore.KVPair) (string, error){
+  var str string
+  //var val []byte
+  if kvpair!=nil && kvpair.Value!=nil {
+   val, err := kvstore.ToByte(kvpair.Value)
+   if err !=nil {
+      logger.Errorw(ctx, "failed to convert to byte array", log.Fields{"err":err})
+      return "Error", err
+    }
+   if err := json.Unmarshal(val,  &str); err !=nil {
+      logger.Errorw(ctx, "Failed to unmarshall", log.Fields{"err":err, "val":val})
+      return "Error", err
+    }
+  }
+  return str, nil
+}
 // Remove will delete an entry at the proxy's path location
 func (p *Proxy) Remove(ctx context.Context, id string) error {
 	completePath := p.path + id
@@ -167,4 +248,27 @@ func (p *Proxy) Remove(ctx context.Context, id string) error {
 		return fmt.Errorf("unable to delete %s in kvStore: %s", completePath, err)
 	}
 	return nil
+}
+func (p *Proxy) GetSingleValue(ctx context.Context, id string, target proto.Message) (proto.Message, error) {
+	completePath := "ports/" + id
+
+	logger.Debugw(ctx, "proxy-get", log.Fields{
+		"path": completePath,
+	})
+
+	blob, err := p.kvStore.Get(ctx, completePath)
+	if err != nil {
+		return nil, fmt.Errorf("failed to retrieve %s from kvstore: %s", completePath, err)
+	} else if blob == nil {
+		return nil, nil // this blob does not exist
+	}
+
+	logger.Debugw(ctx, "parsing-data-blobs", log.Fields{
+		"path": completePath,
+	})
+
+	if err := proto.Unmarshal(blob.Value.([]byte), target); err != nil {
+		return nil, fmt.Errorf("failed to unmarshal %s: %s", blob.Key, err)
+	}
+	return target, nil
 }

@@ -136,7 +136,7 @@ func (ldMgr *LogicalManager) ListLogicalDevices(ctx context.Context, _ *empty.Em
 		return true
 	})
 	logger.Debugw(ctx, "list-all-logical-devices", log.Fields{"num-logical-devices": len(logicalDevices)})
-
+  ldMgr.deviceMgr.SendAllDeviceStatus(ctx);
 	return &voltha.LogicalDevices{Items: logicalDevices}, nil
 }
 

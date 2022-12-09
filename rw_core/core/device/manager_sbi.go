@@ -17,6 +17,8 @@ package device
 
 import (
 	"context"
+//  "strings"
+//  "github.com/opencord/voltha-go/rw_core/types"
 
 	"github.com/golang/protobuf/ptypes/empty"
 	"github.com/opencord/voltha-go/rw_core/utils"
@@ -27,6 +29,9 @@ import (
 	"github.com/opencord/voltha-protos/v5/go/voltha"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
+//	"github.com/opencord/voltha-protos/v5/go/bossopenolt"
+//	"github.com/opencord/voltha-protos/v5/go/onossliceservice"
+
 )
 
 func (dMgr *Manager) GetHealthStatus(ctx context.Context, clientConn *common.Connection) (*health.HealthStatus, error) {
@@ -63,6 +68,7 @@ func (dMgr *Manager) DeviceUpdate(ctx context.Context, device *voltha.Device) (*
 		if err := agent.updateDeviceUsingAdapterData(ctx, device); err != nil {
 			return nil, err
 		}
+//    dMgr.SendDeviceStatusMsg(ctx, device.Id)
 		return &empty.Empty{}, nil
 	}
 	return nil, status.Errorf(codes.NotFound, "%s", device.Id)
@@ -488,16 +494,64 @@ func (dMgr *Manager) SendPacketIn(ctx context.Context, pi *ca.PacketIn) (*empty.
 }
 
 func (dMgr *Manager) DeviceReasonUpdate(ctx context.Context, dr *ca.DeviceReason) (*empty.Empty, error) {
-	ctx = utils.WithNewSpanAndRPCMetadataContext(ctx, "DeviceReasonUpdate")
-	logger.Debugw(ctx, "update-device-reason", log.Fields{"device-id": dr.DeviceId, "reason": dr.Reason})
+  ctx = utils.WithNewSpanAndRPCMetadataContext(ctx, "DeviceReasonUpdate")
+  logger.Debugw(ctx, "update-device-reason", log.Fields{"device-id": dr.DeviceId, "reason": dr.Reason})
 
-	if agent := dMgr.getDeviceAgent(ctx, dr.DeviceId); agent != nil {
-		if err := agent.updateDeviceReason(ctx, dr.Reason); err != nil {
-			return nil, err
-		}
-		return &empty.Empty{}, nil
-	}
-	return nil, status.Errorf(codes.NotFound, "%s", dr.DeviceId)
+  if agent := dMgr.getDeviceAgent(ctx, dr.DeviceId); agent != nil {
+    if err := agent.updateDeviceReason(ctx, dr.Reason); err != nil {
+            return nil, err
+    }
+//    var devices []*voltha.Device
+//      if err:=dMgr.dProxy.List(ctx, &devices); err!=nil{
+//        logger.Errorw(ctx, "failed-to-list-devices-updateDeviceReason", log.Fields{"Error":err})
+//      }
+//      for _, device := range devices{
+//        logger.Infow(ctx, "Search Devices", log.Fields{"device":device.Id})
+//        if !device.Root && device.Id == dr.DeviceId{
+//          logger.Infow(ctx, "Find Device Information", log.Fields{"device-id": device.Id})
+//          var deviceInfo =&onossliceservice.DeviceStatusResponse{}
+//          kvpairs, _ := dMgr.dProxy.GetEtcdList(ctx, "service/voltha/voltha_voltha/ports/"+dr.DeviceId)
+//          logger.Infow(ctx, "Device Information from ETCD", log.Fields{"device-id": device.Id, "keyparis" : kvpairs})
+//          var portSlice []*onossliceservice.PortStatus
+//          for kvpairKey, _ := range kvpairs {
+//            var portStts =&onossliceservice.PortStatus{}
+//            key :=strings.Split(kvpairKey, "/")
+//            var portVal = new(voltha.Port)
+//            _, _ = dMgr.dProxy.GetSingleValue(ctx, key[len(key)-2]+"/"+key[len(key)-1], portVal)
+//            if portVal.Type != voltha.Port_ETHERNET_UNI{
+//              continue
+//            }
+//            portStts.Identifier = key[len(key)-1]
+//            if portVal.OperStatus == common.OperStatus_ACTIVE{
+//              portStts.Status = onossliceservice.DeviceStatus_UP
+//            }else{
+//              portStts.Status = onossliceservice.DeviceStatus_DOWN
+//            }
+//            portSlice = append(portSlice, portStts)
+//          }
+//          if device.OperStatus == common.OperStatus_ACTIVE{
+//            deviceInfo.Status = onossliceservice.DeviceStatus_UP
+//          }else{
+//            deviceInfo.Status = onossliceservice.DeviceStatus_DOWN
+//          }
+//          deviceInfo.Type = onossliceservice.DeviceType_WB_OLT_25G
+//          deviceInfo.Identifier = device.SerialNumber
+//          deviceInfo.PortStatus = portSlice
+//          deviceMsg := types.Message{
+//            Type: types.DeviceStatusResponse,
+//            Data: types.DeviceStatusResponseMessage{
+//              Identifier: deviceInfo.Identifier,
+//              Type : deviceInfo.Type,
+//              Status : deviceInfo.Status,
+//              PortStatus : deviceInfo.PortStatus,
+//            },
+//          }
+//          dMgr.Channel <-deviceMsg
+//        }
+//      }
+    return &empty.Empty{}, nil
+  }
+  return nil, status.Errorf(codes.NotFound, "%s", dr.DeviceId)
 }
 
 func (dMgr *Manager) ReconcileChildDevices(ctx context.Context, parentDeviceID *common.ID) (*empty.Empty, error) {
@@ -533,3 +587,90 @@ func (dMgr *Manager) UpdateImageDownload(ctx context.Context, img *voltha.ImageD
 	}
 	return &empty.Empty{}, nil
 }
+//func (dMgr *Manager) SendDeviceStatusMsg(ctx context.Context, deviceId string) error{
+//  var devices []*voltha.Device
+//  if err:=dMgr.dProxy.List(ctx, &devices); err!=nil{
+//    logger.Errorw(ctx, "failed-to-list-devices-updateDeviceReason", log.Fields{"Error":err})
+//  }
+//  for _, device := range devices{
+//    logger.Infow(ctx, "Search Devices", log.Fields{"device":device.Id})
+//    if device.Id == deviceId{
+//      if device.Root {
+//        logger.Infow(ctx, "Find Device Information", log.Fields{"device-id": device.Id})
+//        var deviceInfo =&onossliceservice.DeviceStatusResponse{}
+//        kvpairs, _ := dMgr.dProxy.GetEtcdList(ctx, "service/voltha/voltha_voltha/ports/"+deviceId)
+//        logger.Infow(ctx, "Device Information from ETCD", log.Fields{"device-id": device.Id, "keyparis" : kvpairs})
+//        var portSlice []*onossliceservice.PortStatus
+//        for kvpairKey, _ := range kvpairs {
+//          var portStts =&onossliceservice.PortStatus{}
+//          key :=strings.Split(kvpairKey, "/")
+//          var portVal = new(voltha.Port)
+//          _, _ = dMgr.dProxy.GetSingleValue(ctx, key[len(key)-2]+"/"+key[len(key)-1], portVal)
+//          logger.Debugw(ctx,"PortVal Device From ETCD", log.Fields{"device-id":deviceId, "portVal":portVal})
+//          if portVal.Type != voltha.Port_PON_OLT{
+//            continue
+//          }
+//          portStts.Identifier = key[len(key)-1]
+//          if portVal.OperStatus == common.OperStatus_ACTIVE{
+//            portStts.Status = onossliceservice.DeviceStatus_UP
+//          }else{
+//            portStts.Status = onossliceservice.DeviceStatus_DOWN
+//          }
+//          portSlice = append(portSlice, portStts)
+//        }
+//        if device.OperStatus == common.OperStatus_ACTIVE{
+//          deviceInfo.Status = onossliceservice.DeviceStatus_UP
+//        }else{
+//          deviceInfo.Status = onossliceservice.DeviceStatus_DOWN
+//        }
+//        deviceInfo.Type = onossliceservice.DeviceType_WB_OLT_25G
+//        deviceInfo.Identifier = device.SerialNumber
+//        deviceInfo.PortStatus = portSlice
+//        deviceMsg := types.Message{
+//          Type: types.DeviceStatusResponse,
+//          Data: types.DeviceStatusResponseMessage{
+//            Identifier: deviceInfo.Identifier,
+//            Type : deviceInfo.Type,
+//            Status : deviceInfo.Status,
+//            PortStatus : deviceInfo.PortStatus,
+//          },
+//        }
+//        dMgr.Channel <-deviceMsg
+//      }else{
+//        logger.Infow(ctx, "Find Device Information", log.Fields{"device-id": device.Id})
+//        var deviceInfo =&onossliceservice.DeviceStatusResponse{}
+//        logger.Infow(ctx, "Device Information from ETCD", log.Fields{"device-id": device.Id})
+//        var portSlice []*onossliceservice.PortStatus
+//        var deviceMac string
+//        for _,parentDevice :=range devices{
+//          if device.ParentId == parentDevice.Id{
+//            deviceMac = parentDevice.MacAddress
+//            break
+//          }
+//        }
+//        _=deviceMac
+//        if device.OperStatus == common.OperStatus_ACTIVE{
+//          deviceInfo.Status = onossliceservice.DeviceStatus_UP
+//        }else{
+//          deviceInfo.Status = onossliceservice.DeviceStatus_DOWN
+//        }
+//        deviceInfo.Type = onossliceservice.DeviceType_ONU
+//        deviceInfo.Identifier = device.SerialNumber
+//        deviceInfo.PortStatus = portSlice
+//        deviceMsg := types.Message{
+//          Type: types.DeviceStatusResponse,
+//          Data: types.DeviceStatusResponseMessage{
+//            Identifier: deviceInfo.Identifier,
+//            ParentId : deviceMac,
+//            Type : deviceInfo.Type,
+//            Status : deviceInfo.Status,
+//            PortStatus : deviceInfo.PortStatus,
+//          },
+//        }
+//        dMgr.Channel <-deviceMsg
+//
+//      }
+//    }
+//  }
+//  return nil
+//}
