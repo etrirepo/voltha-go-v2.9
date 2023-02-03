@@ -70,6 +70,7 @@ type Manager struct {
 	deviceLoadingInProgress map[string][]chan int
 	config                  *config.RWCoreFlags
   //For ONOS Stream!
+  DeviceReportFlag bool
   Channel chan types.Message
   OnosReportStream onossliceservice.SliceService_DeviceReportServer
   OnosContext context.Context
@@ -112,6 +113,7 @@ func NewManagers(dbPath *model.Path, adapterMgr *adapter.Manager, cf *config.RWC
 		deviceLoadingInProgress: make(map[string][]chan int),
 		config:                  cf,
     Channel: make(chan types.Message),
+    DeviceReportFlag : false,
 	}
 	deviceMgr.stateTransitions = state.NewTransitionMap(deviceMgr)
 
@@ -2484,6 +2486,8 @@ func (dMgr *OnosManager) DeviceReport(req *onossliceservice.DeviceStatusRequest,
 //  dMgr.SetStream(o.OnosContext, stream)
   wg := sync.WaitGroup{}
   dMgr.DeviceManager.OnosReportStream = stream
+  dMgr.DeviceManager.DeviceReportFlag =true
+
   wg.Add(1)
   go dMgr.processONOSMessages(dMgr.DeviceManager.OnosContext, stream, &wg)
   wg.Wait()
@@ -2495,6 +2499,7 @@ func (dMgr *OnosManager) SetStream(ctx context.Context, stream onossliceservice.
 
   wg := sync.WaitGroup{}
   dMgr.DeviceManager.OnosReportStream = stream
+  dMgr.DeviceManager.DeviceReportFlag =true
   wg.Add(1)
   go dMgr.processONOSMessages(ctx, stream, &wg)
   wg.Wait()
@@ -2714,6 +2719,9 @@ func(boss *BossOpenoltManager) GetPktInd(ctx context.Context, reqMessage *bossop
 }
 
 func (dMgr *Manager) SendAllDeviceStatus(ctx context.Context) error{
+  if !dMgr.DeviceReportFlag{
+    return nil
+  }
   var devices []*voltha.Device
   if err:=dMgr.dProxy.List(ctx, &devices); err!=nil{
     logger.Errorw(ctx, "failed-to-list-devices-updateDeviceReason", log.Fields{"Error":err})
@@ -2749,7 +2757,7 @@ func (dMgr *Manager) SendAllDeviceStatus(ctx context.Context) error{
           deviceInfo.Status = onossliceservice.DeviceStatus_DOWN
         }
         deviceInfo.Type = onossliceservice.DeviceType_WB_OLT_25G
-        deviceInfo.Identifier = device.SerialNumber
+        deviceInfo.Identifier = device.MacAddress
         deviceInfo.PortStatus = portSlice
         deviceMsg := types.Message{
           Type: types.DeviceStatusResponse,
